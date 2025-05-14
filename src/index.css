@@ -1,0 +1,1138 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,200..800;1,200..800&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 10px 10px 5px #000;
+  }
+}
+
+/* ------------------------- Background de Tablero de Ajedrez Animado ------------------------------------ */
+@layer components {
+  .custom-background {
+    --s: 30px;
+    --_g: #0000, var(--c1) 2deg calc(var(--a) - 2deg), #0000 var(--a);
+    background: conic-gradient(
+        from calc(-45deg - var(--a) / 2) at top var(--p) left var(--p),
+        var(--_g)
+      ),
+      conic-gradient(
+        from calc(-45deg - var(--a) / 2) at top var(--p) left var(--p),
+        var(--_g)
+      ),
+      conic-gradient(
+        from calc(45deg - var(--a) / 2) at top var(--p) right var(--p),
+        var(--_g)
+      ),
+      conic-gradient(
+        from calc(45deg - var(--a) / 2) at top var(--p) right var(--p),
+        var(--_g)
+      ),
+      conic-gradient(
+        from calc(-135deg - var(--a) / 2) at bottom var(--p) left var(--p),
+        var(--_g)
+      ),
+      conic-gradient(
+        from calc(-135deg - var(--a) / 2) at bottom var(--p) left var(--p),
+        var(--_g)
+      ),
+      conic-gradient(
+        from calc(135deg - var(--a) / 2) at bottom var(--p) right var(--p),
+        var(--_g)
+      ),
+      conic-gradient(
+          from calc(135deg - var(--a) / 2) at bottom var(--p) right var(--p),
+          var(--_g)
+        )
+        var(--c2);
+    background-size: calc(2 * var(--s)) calc(2 * var(--s));
+    animation: m 2s infinite alternate linear;
+  }
+
+  /* Definición de las propiedades CSS personalizadas */
+  @property --a {
+    syntax: "<angle>";
+    inherits: true;
+    initial-value: 0deg;
+  }
+  @property --p {
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 0%;
+  }
+  @property --c1 {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: #000;
+  }
+  @property --c2 {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: #000;
+  }
+}
+
+@keyframes m {
+  0%,
+  15% {
+    --a: 135deg;
+    --p: 20%;
+    --c1: #fff;
+    --c2: #000;
+    background-position: 0 0, var(--s) var(--s);
+  }
+  45%,
+  50% {
+    --a: 90deg;
+    --p: 25%;
+    --c1: #fff;
+    --c2: #000;
+    background-position: 0 0, var(--s) var(--s);
+  }
+  50.01%,
+  55% {
+    --a: 90deg;
+    --p: 25%;
+    --c2: #fff;
+    --c1: #000;
+    background-position: var(--s) 0, 0 var(--s);
+  }
+  85%,
+  100% {
+    --a: 135deg;
+    --p: 20%;
+    --c2: #fff;
+    --c1: #000;
+    background-position: var(--s) 0, 0 var(--s);
+  }
+}
+
+/*  ------------------------- Background de Tablero de Ajedrez Animado ------------------------------------ */
+
+/* ------------------------- Animación de Reloj - ProgressClock en el Scroll ------------------------------------ */
+@layer base {
+  @property --progress {
+    syntax: "<integer>";
+    initial-value: 0;
+    inherits: false;
+  }
+
+  body {
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  .component {
+    --size: 15vmin;
+
+    display: grid;
+    grid-template-areas:
+      "timer"
+      "caption";
+    place-items: center;
+    place-content: center;
+    gap: 0.1em;
+    inset: 0;
+    margin: auto;
+    color: #b50556;
+  }
+
+  .timer-wrapper {
+    grid-area: timer;
+    display: grid;
+    place-items: center;
+    place-content: center;
+    grid-template-areas: "container";
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: conic-gradient(
+      from 45deg,
+      var(--color-theme-accent) calc(var(--progress) * 1%),
+      transparent 0
+    );
+  }
+
+  .timer-wrapper > * {
+    grid-area: container;
+  }
+
+  .timer {
+    width: calc(var(--size) / 1.2);
+    height: calc(var(--size) / 1.2);
+  }
+
+  .caption {
+    grid-area: caption;
+  }
+
+  .caption::before,
+  .caption::after {
+    margin-inline: auto;
+    content: counter(progress);
+    font-size: calc(0.6em + var(--size) / 6);
+    font-weight: bold;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .caption::after {
+    content: "%";
+  }
+
+  /* Warning for unsupported browsers */
+  .warning {
+    color: black;
+    background: papayawhip;
+    padding: 1rem;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .warning {
+      display: none;
+    }
+
+    :is(.component, .timer-wrapper, .timer, .timer-hand, .timer-switch) {
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+      animation-timeline: scroll();
+    }
+
+    .component {
+      --plunge-offset: 10rem;
+      --plunge-start: calc(100% - var(--plunge-offset) * 2);
+      --plunge-end: calc(100% - var(--plunge-offset));
+
+      animation-name: progress;
+      animation-range: 0 var(--plunge-start);
+      counter-reset: progress var(--progress);
+    }
+
+    .timer-wrapper {
+      animation-name: progress, turn-upright;
+      animation-range: 0 var(--plunge-start),
+        var(--plunge-start) var(--plunge-end);
+    }
+
+    .timer {
+      --plunge-depth: 0.25em;
+      transform-origin: 50% 0;
+      animation-name: plunge;
+      animation-range: var(--plunge-start) var(--plunge-end);
+    }
+
+    .timer-switch {
+      --plunge-depth: 1em;
+      transform-origin: 50% 0;
+      animation-name: plunge;
+      animation-range: var(--plunge-start) var(--plunge-end);
+    }
+
+    .timer-hand {
+      transform-origin: 50%;
+      rotate: calc((var(--progress) / 100) * 360deg);
+      animation-name: progress;
+      animation-range: 0 var(--plunge-start);
+    }
+
+    @keyframes progress {
+      to {
+        --progress: 100;
+      }
+    }
+
+    @keyframes turn-upright {
+      from {
+        rotate: -10deg;
+      }
+      to {
+        rotate: 0;
+      }
+    }
+
+    @keyframes plunge {
+      50% {
+        translate: 0 var(--plunge-depth);
+      }
+    }
+
+    @keyframes fade-out {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+  }
+}
+
+/* ------------------------- Diseño de progresión de Scroll - ProgressClock en el Scroll ------------------------------------ */
+
+/* ------------------------- Diseño Keyboard ------------------------------------ */
+@layer base {
+  #keyboard-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 500;
+    box-shadow: 0.2vmin 0.1vmin #777, 0.4vmin 0.2vmin #777, 0.6vmin 0.3vmin #777,
+      0.8vmin 0.4vmin #777, 1vmin 0.5vmin #777, 1.2vmin 0.6vmin #777,
+      1.4vmin 0.7vmin #777, 1.6vmin 0.8vmin #777;
+  }
+
+  #keyboard {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate3d(1, 1, 0, -20deg) rotateX(-5deg);
+    transform-style: preserve-3d;
+    margin: 50px auto;
+    width: auto;
+    height: 355px;
+
+    align-items: center;
+    background: #d5d9dc url("") repeat-x;
+    -moz-border-radius-topleft: 7px 21px;
+    -moz-border-radius-topright: 7px 21px;
+    -moz-border-radius-bottomright: 10px;
+    -moz-border-radius-bottomleft: 10px;
+    border-top-left-radius: 7px 21px;
+    border-top-right-radius: 7px 21px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    padding: 50px 0 0 10px;
+    -webkit-box-shadow: inset 0 0 8px #bbb, 0 1px 0 #aaa, 0 4px 0 #bbb,
+      0 10px 30px #111;
+    -moz-box-shadow: inset 0 0 8px #bbb, 0 1px 0 #aaa, 0 4px 0 #bbb,
+      0 10px 30px #111;
+    box-shadow: 0.2vmin 0.1vmin #777, 0.4vmin 0.2vmin #777, 0.6vmin 0.3vmin #777,
+      0.8vmin 0.4vmin #777, 1vmin 0.5vmin #777, 1.2vmin 0.6vmin #777,
+      1.4vmin 0.7vmin #777, 1.6vmin 0.8vmin #777;
+  }
+
+  ul {
+    list-style-type: none;
+    width: 784px;
+    margin: 0 auto;
+  }
+  li {
+    float: left;
+  }
+
+  .key {
+    display: block;
+    color: #aaa;
+    font: bold 9pt arial;
+    text-decoration: none;
+    text-align: center;
+    width: 44px;
+    height: 35px;
+    margin: 5px;
+    background: #222;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border-top: 1px solid #222;
+    -webkit-box-shadow: inset 0 0 25px #333, 0 1px 0 #000, 0 2px 0 #222,
+      0 2px 3px #333;
+    -moz-box-shadow: inset 0 0 25px #333, 0 1px 0 #000, 0 2px 0 #222,
+      0 2px 3px #333;
+    box-shadow: inset 0 0 25px #333, 0 1px 0 #000, 0 2px 0 #222, 0 2px 3px #333;
+    text-shadow: 0px -1px 0px #000;
+  }
+
+  .key:active,
+  .keydown {
+    color: #888;
+    background: #222;
+    margin: 7px 5px 3px;
+    -webkit-box-shadow: inset 0 0 25px #333, 0 0 3px #333;
+    -moz-box-shadow: inset 0 0 25px #333, 0 0 3px #333;
+    box-shadow: inset 0 0 25px #333, 0 0 3px #333;
+    border-top: 1px solid #000;
+  }
+
+  .fn span {
+    display: block;
+    margin: 14px 5px 0 0;
+    text-align: right;
+    font: bold 6pt arial;
+    text-transform: uppercase;
+  }
+  #esc {
+    margin: 6px 15px 0 0;
+    font-size: 7.5pt;
+    text-transform: lowercase;
+  }
+
+  #numbers li a span {
+    display: block;
+  }
+
+  #numbers li a b {
+    margin: 3px 0 3px;
+    display: block;
+  }
+
+  #numbers li .alt b {
+    display: block;
+    margin: 0 0 3px;
+  }
+
+  #numbers li #delete span {
+    text-align: right;
+    margin: 23px 10px 0 0;
+    font-size: 7.5pt;
+    text-transform: lowercase;
+  }
+
+  #qwerty li a span {
+    display: block;
+    margin: 13px 0 0;
+    text-transform: uppercase;
+  }
+
+  #qwerty li #tab span {
+    text-align: left;
+    margin: 23px 0 0 10px;
+    font-size: 7.5pt;
+    text-transform: lowercase;
+  }
+
+  #qwerty li .alt b {
+    display: block;
+    margin: 3px 0 0;
+  }
+  #qwerty li .alt span {
+    margin: 2px 0 0;
+  }
+
+  #asdfg li a span {
+    display: block;
+    margin: 13px 0 0;
+    text-transform: uppercase;
+  }
+
+  #asdfg li .alt span {
+    margin: 0;
+    text-transform: lowercase;
+  }
+  #asdfg li .alt b {
+    display: block;
+    margin: 3px 0 0;
+  }
+  #asdfg li #caps b {
+    display: block;
+    background: #999;
+    width: 4px;
+    height: 4px;
+    border-radius: 10px;
+    margin: 9px 0 0 10px;
+    -webkit-box-shadow: inset 0 1px 0 #666;
+    -moz-box-shadow: inset 0 1px 0 #666;
+    box-shadow: inset 0 1px 0 #666;
+  }
+  #asdfg li #caps span {
+    text-align: left;
+    margin: 10px 0 0 10px;
+    font-size: 7.5pt;
+  }
+  #asdfg li #enter span {
+    text-align: right;
+    margin: 23px 10px 0 0;
+    font-size: 7.5pt;
+  }
+
+  #zxcvb li a span {
+    display: block;
+    margin: 13px 0 0;
+    text-transform: uppercase;
+  }
+  #zxcvb li .shiftleft span {
+    text-align: left;
+    margin: 23px 0 0 10px;
+    font-size: 7.5pt;
+    text-transform: lowercase;
+  }
+  #zxcvb li .shiftright span {
+    text-align: right;
+    margin: 23px 10px 0 0;
+    font-size: 7.5pt;
+    text-transform: lowercase;
+  }
+  #zxcvb li .alt b {
+    display: block;
+    margin: 4px 0 0;
+  }
+  #zxcvb li .alt span {
+    margin: 0;
+  }
+
+  #bottomrow li #fn span,
+  #bottomrow li #control span,
+  #bottomrow li #optionleft span,
+  #bottomrow li #commandleft span {
+    display: block;
+    text-align: left;
+    margin: 31px 0 0 8px;
+    font-size: 7.5pt;
+    text-transform: lowercase;
+  }
+
+  #bottomrow li #optionright span,
+  #bottomrow li #commandright span {
+    display: block;
+    text-align: right;
+    margin: 31px 8px 0 0;
+    font-size: 7.5pt;
+    text-transform: lowercase;
+  }
+
+  #bottomrow ol li #left span,
+  #bottomrow ol li #right span,
+  #bottomrow ol li #up span,
+  #bottomrow ol li #down span {
+    display: block;
+    margin: 9px 0 0;
+  }
+
+  .fn {
+    height: 26px;
+    width: 46px;
+  }
+  #delete {
+    width: 72px;
+  }
+  #tab {
+    width: 72px;
+  }
+  #caps {
+    width: 85px;
+  }
+  #enter {
+    width: 85px;
+  }
+  .shiftleft,
+  .shiftright {
+    width: 112px;
+  }
+  #fn,
+  #control,
+  .option,
+  .command,
+  #spacebar {
+    height: 49px;
+  }
+
+  #control {
+    width: 56px;
+  }
+  .option {
+    width: 46px;
+  }
+  .command {
+    width: 67px;
+  }
+  #spacebar {
+    width: 226px;
+  }
+
+  #left img,
+  #up img,
+  #down img,
+  #right img {
+    border: none;
+  }
+  ul ol {
+    list-style-type: none;
+  }
+  #down {
+    height: 23px;
+  }
+  #up,
+  #left,
+  #right {
+    height: 24px;
+  }
+  #left,
+  #right {
+    margin: 30px 5px 5px;
+  }
+  #left:active,
+  #right:active {
+    margin: 32px 5px 3px;
+  }
+  #up {
+    margin: 5px 5px 1px;
+    border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+  }
+  #up:active {
+    margin: 8px 5px -2px;
+  }
+  #down {
+    margin: 0 5px 5px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+  }
+  #down:active {
+    margin: 3px 5px 4px;
+  }
+
+  #main {
+    width: 700px;
+    padding: 20px 50px;
+    margin: 0 auto 50px;
+    background: #fff;
+    border-radius: 5px;
+    -webkit-box-shadow: 0 1px 2px #aaa;
+  }
+
+  small {
+    font: italic 8pt/12pt arial;
+    color: #aaa;
+    padding: 0 130px 0 0;
+    display: block;
+  }
+
+  cite {
+    display: block;
+    padding: 0 0 30px;
+    margin: 0 auto;
+    text-align: center;
+    color: #ccc;
+    font: italic bold 8pt arial;
+  }
+
+  cite a {
+    color: #e5e5e5;
+    text-decoration: underline;
+  }
+
+  #main a {
+    color: #007fff;
+  }
+
+  ul,
+  ol {
+    padding: 0px;
+    margin: 0;
+  }
+
+  /* Micro Clearfix by Nicolas Gallagher - http://nicolasgallagher.com/micro-clearfix-hack */
+  /* For modern browsers */
+  .cf:before,
+  .cf:after {
+    content: "";
+    display: table;
+  }
+  .cf:after {
+    clear: both;
+  }
+
+  /* For IE 6/7 (trigger hasLayout) */
+  .cf {
+    zoom: 1;
+  }
+}
+
+/* -------------------------------- Diseño Carousel 3D para mostrar Proyectos ------------------------------------------------*/
+
+:root {
+  --crsl-bg: transparent;
+  --box-bg: #070707;
+  --box-shadow: #0000001c;
+  --box-shadow-border: #0000000f;
+  --box-border: #fff;
+}
+
+html > .carousel,
+body > .carousel {
+  padding-top: 125px;
+}
+.carousel {
+  width: 86.5vw;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.carousel__prev,
+.carousel__next {
+  position: absolute;
+  bottom: -15%;
+  transition: transform 0.25s ease;
+}
+
+.carousel__prev i,
+.carousel__next i {
+  font-size: 60px;
+  color: var(--box-border);
+  cursor: pointer;
+}
+
+.carousel__prev:hover,
+.carousel__next:hover {
+  transform: scale(1.25);
+}
+
+.carousel__prev {
+  left: 40%;
+}
+
+.carousel__next {
+  right: 40%;
+}
+
+@media screen and (max-width: 768px){
+  .carousel__prev {
+    left: 20%;
+  }
+  
+  .carousel__next {
+    right: 20%;
+  } 
+}
+
+.carousel__body {
+  width: 100%; 
+  overflow: hidden;
+  padding: 20px 0 50px 0;
+}
+.carousel__body .carousel__slider {
+  position: relative;
+  transition: transform 1s ease-in-out;
+  background: var(--crsl-bg);
+}
+
+.carousel__body .carousel__slider__item {
+  position: relative;
+  display: block;
+  float: left;
+  box-sizing: border-box;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.carousel__body .carousel__slider__item .item__3d-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 1s ease-in-out;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+.carousel__body .carousel__slider__item .item__3d-frame:after {
+  content: "";
+  position: absolute;
+  bottom: -15%;
+  width: 100%;
+  height: 40px;
+  background: var(--box-shadow);
+  box-shadow: 0px 0px 5px 5px var(--box-shadow);
+  transform: rotateX(90deg) translate3d(0px, -20px, 0px);
+  opacity: 0.85;
+}
+
+.carousel__body .carousel__slider__item .item__3d-frame__box {
+  display: flex;
+  align-items: center;
+  vertical-align: middle;
+  text-align: center;
+  position: absolute;
+  width: 100%;
+  height: 90%;
+  margin-top: 50px;
+  box-sizing: border-box;
+  border-color: var(--box-border);
+  background: var(--box-bg);
+  border-width: 3px;
+  border-style: solid;
+}
+
+.carousel__body .carousel__slider__item .item__3d-frame__box h1 {
+  font-size: 7em;
+  width: 100%;
+  color: var(--box-border);
+}
+
+.carousel__body .carousel__slider__item .item__3d-frame__box--right,
+.carousel__body .carousel__slider__item .item__3d-frame__box--left {
+  top: 0;
+  width: 40px;
+  backface-visibility: hidden;
+}
+
+.carousel__body .carousel__slider__item .item__3d-frame__box--left {
+  left: 0;
+  border-left-width: 5px;
+  transform: translate3d(1px, 0, -40px) rotateY(-90deg);
+  transform-origin: 0%;
+}
+
+.carousel__body .carousel__slider__item .item__3d-frame__box--right {
+  right: 0;
+  border-right-width: 5px;
+  transform: translate3d(-1px, 0, -40px) rotateY(90deg);
+  transform-origin: 100%;
+}
+
+/* -------------------------------- Diseño Carousel 3D para mostrar Proyectos ------------------------------------------------*/
+
+/* -------------------------------- Diseño infinite horizontal scroll to show technologies animation -------------------------*/
+.scroll {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  /* Gradiente opcional para suavizar los bordes */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #fff 20%, #fff 80%, transparent);
+}
+
+/* El contenedor que une ambas copias */
+.marquee {
+  display: flex;
+  /* Permite que el ancho se ajuste al contenido duplicado */
+  width: max-content;
+  /* La animación se realiza sobre toda la tira duplicada */
+  animation: marquee var(--time) linear infinite;
+}
+
+/* La animación mueve la tira de 0 a -50%
+   (al ser duplicada, -50% equivale a desplazar una copia completa) */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+
+@keyframes marquee2 {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(50%);
+  }
+}
+
+/* Estilos para cada item (span) */
+.marquee span {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 10px;
+  letter-spacing: 0.1em;
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background 0.5s;
+}
+
+.marquee span:hover {
+  background: #677174;
+  cursor: pointer;
+}
+
+.marquee span img {
+  object-fit: contain;
+  width: 30px;
+  height: 30px;
+  margin-right: 8px;
+}
+
+
+
+/* -------------------------------- Diseño infinite horizontal scroll to show technologies animation ------------------------------------------------*/
+
+
+/* -------------------------------- Diseño Code Typing IDE -------------------------------- */
+
+.illustration-editor {
+  position: absolute;
+  top: 10%;
+  left: 70%;
+  transform: translateY(18%);
+  margin-top: -2rem;
+  margin-right: -10rem;
+  display: grid;
+  grid-template-rows: 24px auto;
+  justify-items: center;
+}
+
+
+.illustration-editor .code {
+  position: absolute;
+  width: 300px;
+  height: 195px;
+  background: #1D1E22;
+  box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  z-index: 5;
+}
+
+
+
+.illustration-editor .code header {
+  display: grid;
+  grid-template-columns: 36px auto 36px;
+  align-items: center;
+}
+
+.illustration-editor .code header svg {
+  margin: 10px;
+}
+
+.illustration-editor .code header h1 {
+  font-family: Lato, sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 1.57px;
+  color: #C5C8D4;
+  margin: 0;
+}
+
+.illustration-editor .code-html {
+  left: -100px;
+  top: 55px;
+}
+
+.illustration-editor .code-css {
+  left: 50px;
+  top: 200px;
+}
+
+.illustration-editor .code-js {
+  left: -175px;
+  top: 370px;
+}
+
+.illustration-editor .code .code-content {
+  margin: 0 10px 10px;
+  color: white;
+}
+
+.illustration-editor .code .code-content .c-r {
+  color: #A88038;
+}
+
+.illustration-editor .code .code-content .c-o {
+  color: #DE7300;
+}
+
+.illustration-editor .code .code-content .c-y {
+  color: #E1CA72;
+}
+
+.illustration-editor .code .code-content .c-g {
+  color: #74B087;
+}
+
+.illustration-editor .code .code-content .c-p {
+  color: #9F8198;
+}
+
+.illustration-editor .code .code-content .c-b {
+  color: #7A99AD;
+}
+
+.illustration-editor .code .code-content .c-c {
+  color: #666666;
+}
+
+/* Reglas generadas a partir de los bucles para .line-* dentro de .code-content code */
+.illustration-editor .code-css .code-content code .line-1 {
+  width: 0%;
+  margin: 0;
+  border-right: 0.15em solid transparent;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  animation: typing-1 3s 0s steps(30, end) forwards, cursor 1s linear 0s 3;
+  animation-duration: 1s;
+  animation-timing-function: steps(10, end);
+}
+
+.illustration-editor .code-css .code-content code .line-2 {
+  width: 0%;
+  margin: 0;
+  border-right: 0.15em solid transparent;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  animation: typing-2 3s 3s steps(30, end) forwards, cursor 1s linear 3s 3;
+  margin-left: 2rem;
+}
+
+.illustration-editor .code-css .code-content code .line-3 {
+  width: 0%;
+  margin: 0;
+  border-right: 0.15em solid transparent;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  animation: typing-3 3s 6s steps(30, end) forwards, cursor 1s linear 6s 3;
+  animation-duration: 1s;
+  animation-timing-function: steps(10, end);
+  margin-left: 4rem;
+}
+
+.illustration-editor .code-css .code-content code .line-4 {
+  width: 0%;
+  margin: 0;
+  border-right: 0.15em solid transparent;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  animation: typing-4 3s 9s steps(30, end) forwards, cursor 1s linear 9s 3;
+  animation-duration: 1s;
+  animation-timing-function: steps(10, end);
+  margin-left: 4rem;
+}
+
+.illustration-editor .code-css .code-content code .line-5 {
+  width: 0%;
+  margin: 0;
+  border-right: 0.15em solid transparent;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  border-color: transparent;
+  animation: typing-5 3s 12s steps(30, end) forwards, cursor-persist 1s linear 12s infinite;
+  margin-left: 4rem;
+}
+
+
+.editor-block {
+  position: relative;
+  display: block;
+  width: 0px;
+  height: 451px;
+  background: linear-gradient(109.61deg, #4C4F5A 4.26%, #202125 84.84%);
+  border-radius: 10px;
+}
+
+
+@media screen and (max-width: 1300px) {
+  .illustration-editor {
+    left: 65%;
+  }
+  .illustration-editor .code {
+    width: 260px;
+  }
+
+  .illustration-editor .code-js .code-content code .code-js-content, .illustration-editor .code-css .code-content, .illustration-editor .code-html .code-content {
+    font-size: 0.85rem;
+  }
+  
+}
+
+@media screen and (max-width: 1600px) {
+  .editor-block {
+    height: 300px;
+  }
+}
+
+
+
+@keyframes typing-1 {
+  from { width: 0 }
+  to { width: 70px }
+}
+@keyframes typing-2 {
+  from { width: 0 }
+  to { width: 250px }
+}
+@keyframes typing-3 {
+  from { width: 0 }
+  to { width: 70px }
+}
+@keyframes typing-4 {
+  from { width: 0 }
+  to { width: 85px }
+}
+@keyframes typing-5 {
+  from { width: 0 }
+  to { width: 151px }
+}
+
+@keyframes cursor {
+  from, to, 30%, 80% { border-color: transparent }
+  25%, 75% { border-color: white }
+}
+
+@keyframes cursor-persist {
+  from, 45% { border-color: transparent }
+  50%, to { border-color: white }
+}
+
+/* Appear Content on Scroll */ 
+
+.appear_content {
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.appear_content.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+
+/* Animación de 180 grados para arrow up y arrow down*/
+
+@keyframes rotate {
+  0% { transform: rotate(0deg) scale(1.2) translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1) }
+  50% { transform: translateY(0%); animation-timing-function: cubic-bezier(0,0,0.2,1); }
+  100% { transform: rotate(180deg) scale(1)  translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1) }
+}
+
+@keyframes rotate1 {
+  0% { transform: rotate(180deg) scale(1.2) translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1) }
+  50% { transform: translateY(0%); animation-timing-function: cubic-bezier(0,0,0.2,1); }
+  100% { transform: rotate(360deg) scale(1)  translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1) }
+}
+
+.arrow-down {
+  animation: rotate1 1s ease-out forwards;
+}
+
+.arrow-up {
+  animation: rotate 1s ease-out forwards;
+}
+
+
+/* Custom Highlighter */
+
+@media (max-width: 768px) {
+  .custom-highlighter {
+    font-size: 0.6rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .custom-highlighter {
+    overflow-y: hidden;
+    overflow-x: hidden;
+    /* hide scroll bar */
+  }
+  .custom-highlighter::-webkit-scrollbar {
+    display: none;
+  }
+  
+}
