@@ -253,7 +253,7 @@ export default function ProjectsDesktop({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
             transition={{ duration: 0.5 }}
-            className={`absolute min-xl:top-[6rem] min-xl:left-[40rem] bg-gray-900 rounded-xl shadow-xl w-[500px] h-[450px] z-10 max-md:top-40 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[75%] max-md:h-[40%] min-lg:top-[1rem] min-lg:left-[22rem] overflow-auto scrollbar-hide`}
+            className={`absolute min-xl:top-[6rem] min-xl:left-[40rem] bg-gray-900 rounded-xl shadow-xl w-[500px] h-[450px] z-10 max-md:top-40 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[22rem] overflow-auto scrollbar-hide p-2`}
           >
             <div className="absolute top-0 left-0 bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-pointer max-md:px-4 w-full">
               <span

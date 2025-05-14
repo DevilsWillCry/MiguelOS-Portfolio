@@ -2,6 +2,10 @@ import { useRef, useState } from "react";
 
 import AboutMeDesktop from "./AboutMeDesktop";
 import ProjectsDesktop from "./ProjectsDesktop";
+import jsonIcon from "../assets/json-icon.svg";
+import ProjectIcon from "../assets/project_icon.png";
+import FolderIcon from "../assets/folder-icon.svg";
+import windowsIcon from "../assets/windows-init.svg";
 
 export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
   const screenRef = useRef(null);
@@ -10,14 +14,17 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
     about: { show: false, minimized: false },
     projects: { show: false, minimized: false },
   });
-  
+
   const handleWindowsMinimized = (nameObject) => {
     console.log(nameObject);
     if (typeof nameObject != "string") return;
 
     setWindows({
       ...windows,
-      [nameObject]: { ...windows[nameObject], minimized: !windows[nameObject].minimized},
+      [nameObject]: {
+        ...windows[nameObject],
+        minimized: !windows[nameObject].minimized,
+      },
     });
   };
 
@@ -31,7 +38,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
   };
 
   console.log(windows);
-  
+
   return (
     <div
       ref={screenRef}
@@ -63,20 +70,33 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
       />
 
       {/* Barra de tareas */}
-      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-r from-gray-800/80 to-gray-900/80 flex items-center px-2 max-md:hidden">
-        {
-          Object.keys(windows).map((key) => {
-            return windows[key].minimized && (
+      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-r from-gray-800/80 to-gray-900/80 flex items-center px-2 max-md:hidden rounded">
+        <button className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded mr-2">
+          <img src={windowsIcon} alt="windows icon" className="w-6 h-6" />
+        </button>
+        {Object.keys(windows).map((key) => {
+          return (
+            windows[key].minimized && (
               <button
                 key={key}
                 onClick={() => handleWindowsMaximized(key)}
                 className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded mr-2"
               >
-                {key}
+                {key === "about" ? (
+                  <img src={jsonIcon} alt="json icon" className="w-6 h-6" />
+                ) : key === "projects" ? (
+                  <img
+                    src={ProjectIcon}
+                    alt="folder icon"
+                    className="w-6 h-6"
+                  />
+                ) : (
+                  ""
+                )}
               </button>
-            );
-          })
-        }
+            )
+          );
+        })}
       </div>
     </div>
   );

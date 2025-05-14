@@ -6,6 +6,7 @@ import userIcon from "../assets/main-image.png";
 import jsonIcon from "../assets/json-icon.svg";
 import JsonCodeBlock from "./JsonCodeBlock";
 import ArrowDownUp from "./ArrowDownUp";
+
 export default function AboutMeDesktop({
   onMinimizeChange,
   onMaximizeChange,
@@ -66,7 +67,7 @@ export default function AboutMeDesktop({
         observer.unobserve(loadMoreRef.current);
       }
     };
-  }, [loadMoreRef]);
+  }, [loadMoreRef, onMaximizeChange]);
 
   return (
     <>
@@ -105,14 +106,14 @@ export default function AboutMeDesktop({
             dragMomentum={false}
             dragElastic={0.8}
             dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-            className="absolute  bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[65%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[75%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%]"
+            className="absolute  bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[65%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] overflow-y-auto scrollbar-hide"
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
             transition={{ duration: 0.5 }}
           >
             {/* Barra superior */}
-            <div className="bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30">
+            <div className="sticky top-0 w-full bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30">
               <span className="text-sm">Sobre_mí.json</span>
               <div className="flex gap-2">
                 <FaMinus
@@ -144,7 +145,7 @@ export default function AboutMeDesktop({
             </div>
 
             {/* Contenido de la ventana de about me como si fuera un archivo JSON o YAML*/}
-            <div className="relative scroll-y-hidden overflow-y-auto h-full  rounded-xl scrollbar-hide">
+            <div className="relative scroll-y-hidden overflow-y-auto h-full  rounded-xl scrollbar-hide py-1">
               <JsonCodeBlock />
               <div ref={loadMoreRef} className="w-[1px] h-[1px]"></div>
             </div>

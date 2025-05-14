@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import ArrowDownUp from "./ArrowDownUp";
 
 export default function JsonCodeBlock() {
+  const [isObserved, setIsObserved] = useState(false);
 
   return (
     <div className="relative">
-      <pre className="bg-gray-900 text-sm p-4 rounded-md font-mono overflow-y-auto leading-relaxed text-wrap h-full w-full">
+      <pre className="bg-gray-900 text-sm p-5 rounded-md font-mono overflow-y-auto leading-relaxed text-wrap h-full w-full ">
         <code>
           <span className="text-sky-400">{"{"}</span>
           {"\n"}

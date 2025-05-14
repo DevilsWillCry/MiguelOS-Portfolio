@@ -97,7 +97,7 @@ function PcFrame() {
         <div className="h-[2%] w-[1%] absolute top-3 left-[50%] translate-x-[-50%]  bg-black z-[101] rounded-full"></div>
       </div>
       {/* Bloque inferior del PC*/}
-      <div className=" border-gray-500 flex flex-row items-center justify-end px-5 fixed bottom-3 right-[50%] translate-x-[50%] w-[95%] h-[9%] z-[60] bg-[#222222] rounded-br-2xl rounded-bl-2xl">
+      <div className=" border-gray-500 flex flex-row items-center justify-end px-5 fixed bottom-3 right-[50%] translate-x-[50%] w-[95%] h-[9%] z-[60] bg-[#222222] rounded-br-2xl rounded-bl-2xl max-md:w-[90%]">
         <Switchers isOn={isOn} isOff={isOffScreen} handleClick={handleClick} />
       </div>
     </>

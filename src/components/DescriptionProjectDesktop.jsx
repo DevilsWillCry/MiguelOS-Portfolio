@@ -6,6 +6,7 @@ import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 export default function DescriptionProjectDesktop({ content, isOn }) {
   console.log(content);
+  
 
   return (
     <div className="prose prose-invert w-full h-full  p-3 text-[0.8rem] text-wrap">
