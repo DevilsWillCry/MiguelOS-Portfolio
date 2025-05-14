@@ -145,7 +145,7 @@ export default function AboutMeDesktop({
             </div>
 
             {/* Contenido de la ventana de about me como si fuera un archivo JSON o YAML*/}
-            <div className="relative scroll-y-hidden overflow-y-auto h-full  rounded-xl scrollbar-hide py-1">
+            <div className="relative scroll-y-hidden overflow-y-auto overflow-x-hidden h-full  rounded-xl scrollbar-hide py-1">
               <JsonCodeBlock />
               <div ref={loadMoreRef} className="w-[1px] h-[1px]"></div>
             </div>
