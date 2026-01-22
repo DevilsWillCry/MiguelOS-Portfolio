@@ -11,7 +11,7 @@ export default function ShutDownPcFrame({ isOn, isOff, count }) {
     "> LinkedIn connection: CLOSED",
     "Releasing resources...",
     "Clearing cache...",
-    "Goodbye, Miguel.",
+    "Goodbye.",
     "[System OFFLINE]",
   ];
 
@@ -61,14 +61,15 @@ export default function ShutDownPcFrame({ isOn, isOff, count }) {
   return (
     <div
       className={`bg-black text-white font-mono overflow-hidden w-full h-full ${
-        showFrameOff && !isOn && count >= 2
+        showFrameOff && !isOn
           ? "opacity-100"
           : "opacity-0 hidden duration-1000 pointer-events-none"
       } transition-all z-[100]  absolute top-0 left-1/2 -translate-x-1/2`}
     >
       <div className="whitespace-pre-wrap ml-2 mt-2 max-md:text-xs">
         {visibleLines.map((line, index) => (
-          <div key={index}>{line}</div>
+          // condicional para evitar renderizar la línea undefined al inicio y en caso de isOn reiniciar el estado 
+          isOn ? null : line !== undefined && <div key={index}>{line}</div>
         ))}
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2W text-xl font-bold max-md:-translate-y-0 flex flex-col items-center">

@@ -32,7 +32,7 @@ export default function StartUpPcFrame({ isOn, isOff, setAudioOn }) {
     return () => {
       clearTimeout(timeoutRef.current);
     };
-  }, [showFrame, isOn]);
+  });
 
   useEffect(() => {
     console.log(isOn);
@@ -41,7 +41,6 @@ export default function StartUpPcFrame({ isOn, isOff, setAudioOn }) {
       setVisibleLines([]);
     } else {
       clearTimeout(timeoutRef.current);
-      console.log("Evento ocurrió antes de que se ocultara el frame");
     }
   }, [isOn]);
 
@@ -76,7 +75,7 @@ export default function StartUpPcFrame({ isOn, isOff, setAudioOn }) {
         >
           <div className="ml-2 max-md:text-xs">
             {visibleLines.map((line, index) => (
-              <div key={index}>{line}</div>
+              isOn ? <div key={index}>{line}</div> : null
             ))}
           </div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2W text-xl font-bold max-md:-translate-y-0 flex flex-col items-center">

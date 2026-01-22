@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaWindowClose, FaMinus, FaUserCircle } from "react-icons/fa";
-import userIcon from "../assets/main-image.png";
 import jsonIcon from "../assets/json-icon.svg";
 import JsonCodeBlock from "./JsonCodeBlock";
 import ArrowDownUp from "./ArrowDownUp";
@@ -15,6 +14,7 @@ export default function AboutMeDesktop({
   containerRef,
 }) {
   const loadMoreRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const [isObserved, setIsObserved] = useState(false);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function AboutMeDesktop({
   }, [loadMoreRef, onMaximizeChange]);
 
   return (
-    <>
+    <div>
       {/* Icono en el escritorio */}
       <motion.div
         drag
@@ -84,7 +84,7 @@ export default function AboutMeDesktop({
             ...prev,
             about: {
               show: true,
-              minimized: false,
+              minimized: true,
             },
           }));
         }}
@@ -106,14 +106,14 @@ export default function AboutMeDesktop({
             dragMomentum={false}
             dragElastic={0.8}
             dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-            className="absolute  bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[65%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] overflow-y-auto scrollbar-hide"
+            className="absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[60%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] flex flex-col"
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
             transition={{ duration: 0.5 }}
           >
             {/* Barra superior */}
-            <div className="sticky top-0 w-full bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30">
+            <div className="sticky top-0 w-full bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30 flex-shrink-0">
               <span className="text-sm">Sobre_mí.json</span>
               <div className="flex gap-2">
                 <FaMinus
@@ -144,15 +144,22 @@ export default function AboutMeDesktop({
               </div>
             </div>
 
-            {/* Contenido de la ventana de about me como si fuera un archivo JSON o YAML*/}
-            <div className="relative scroll-y-hidden overflow-y-auto overflow-x-hidden h-full  rounded-xl scrollbar-hide py-1">
-              <JsonCodeBlock />
-              <div ref={loadMoreRef} className="w-[1px] h-[1px]"></div>
+            {/* Contenedor scrolleable con flecha posicionada dentro */}
+            <div className="relative flex-1 overflow-hidden">
+              {/* Contenido scrolleable */}
+              <div ref={scrollContainerRef} className="relative overflow-y-auto overflow-x-hidden h-full scrollbar-hide py-1">
+                <JsonCodeBlock />
+                <div ref={loadMoreRef} className="w-[1px] h-[1px]"></div>
+              </div>
+
+              {/* Flecha sticky al final */}
+              <div className="sticky bottom-0 right-0 pointer-events-none z-[1000]w-auto h-auto bg-white">
+                <ArrowDownUp isObserved={isObserved} />
+              </div>
             </div>
-            <ArrowDownUp isObserved={isObserved} />
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

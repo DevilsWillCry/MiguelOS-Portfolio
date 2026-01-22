@@ -101,7 +101,7 @@ export default function ProjectsDesktop({
             ...prev,
             projects: {
               show: true,
-              minimized: false,
+              minimized: true,
             },
           }));
         }}
@@ -122,7 +122,7 @@ export default function ProjectsDesktop({
             dragConstraints={containerRef}
             dragElastic={0.8}
             dragMomentum={false}
-            className={`absolute min-xl:top-[12rem] min-xl:left-[25rem] bg-gray-900 rounded-xl shadow-xl w-[300px] h-[250px] z-10 max-md:top-32 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[75%] max-md:h-[40%] min-lg:top-[1rem] min-lg:left-[22rem] `}
+            className={`absolute min-xl:top-[12rem] min-xl:left-[25rem] bg-gray-900 rounded-xl shadow-xl w-[300px] h-[250px] z-20 max-md:top-32 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[75%] max-md:h-[40%] min-lg:top-[1rem] min-lg:left-[22rem] `}
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
