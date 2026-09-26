@@ -13,9 +13,9 @@ import ImageTAILWIND from "../assets/tailwind-svgrepo-com.svg";
 import ImageSQL from "../assets/sql-database-generic-svgrepo-com.svg";
 import ImageBOOTSTRAP from "../assets/bootstrap-svgrepo-com.svg";
 
-import HtmlCodeBlock from "../components/HtmlCodeBlock";
-import CssCodeBlock from "../components/CssCodeBlock";
-import JsCodeBlock from "../components/JsCodeBlock";
+import HtmlCodeBlock from "../components/code/HtmlCodeBlock";
+import CssCodeBlock from "../components/code/CssCodeBlock";
+import JsCodeBlock from "../components/code/JsCodeBlock";
 
 export const arrayElements = [
   {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import ArrowDownUp from "./ArrowDownUp";
+import ArrowDownUp from "../ui/ArrowDownUp";
 
 export default function JsonCodeBlock() {
   const [isObserved, setIsObserved] = useState(false);

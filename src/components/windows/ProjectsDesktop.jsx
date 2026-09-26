@@ -6,12 +6,12 @@ import {
   FaUserCircle,
   FaArrowAltCircleLeft,
 } from "react-icons/fa";
-import ProjectIcon from "../assets/project_icon.png";
-import FolderIcon from "../assets/folder-icon.svg";
-import { arrayProjectsDesktop } from "../helpers/arrayProjectsDesktop";
-import ShowInsideFolder from "./ShowInsideFolder";
-import DescriptionProjectDesktop from "./DescriptionProjectDesktop";
-import ArrowDownUp from "./ArrowDownUp";
+import ProjectIcon from "../../assets/project_icon.png";
+import FolderIcon from "../../assets/folder-icon.svg";
+import { arrayProjectsDesktop } from "../../helpers/arrayProjectsDesktop";
+import ShowInsideFolder from "../projects/ShowInsideFolder";
+import DescriptionProjectDesktop from "../projects/DescriptionProjectDesktop";
+import ArrowDownUp from "../ui/ArrowDownUp";
 
 export default function ProjectsDesktop({
   onMinimizeChange,

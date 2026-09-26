@@ -5,7 +5,7 @@ import {
   LinkIcon,
   CodeBracketIcon
 } from "@heroicons/react/24/solid";
-import { arrayElements } from "../helpers/arrayCarousel";
+import { arrayElements } from "../../helpers/arrayCarousel";
 
 const Carousel3D = () => {
   const carouselRef = useRef(null);

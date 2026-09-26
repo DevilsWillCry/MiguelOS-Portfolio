@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import PcFrame from "./components/PcFrame";
+import PcFrame from "./components/desktop/PcFrame";
 
 
 function App() {

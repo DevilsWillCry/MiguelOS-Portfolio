@@ -1,9 +1,9 @@
 import React from "react";
 
-import jsonIcon from "../assets/json-icon.svg";
-import ProjectIcon from "../assets/project_icon.png";
-import ThemeChangerIcon from "../assets/theme-changer-icon.svg";
-import windowsIcon from "../assets/home_icon.min.svg";
+import jsonIcon from "../../assets/json-icon.svg";
+import ProjectIcon from "../../assets/project_icon.png";
+import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
+import windowsIcon from "../../assets/home_icon.min.svg";
 
 export default function HomeDetail({ isOn, isMaximizedHome, items, onHomeMaximizedIcon}) {
   return (

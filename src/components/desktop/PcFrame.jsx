@@ -3,7 +3,7 @@ import Switchers from "./Switchers";
 import DesktopPortfolio from "./DesktopPortfolio";
 import StartUpPcFrame from "./StartUpPcFrame";
 import ShutDownPcFrame from "./ShutDownPcFrame";
-import startUpWindowsSound from "../assets/Windows_Startup_Sound.wav";
+import startUpWindowsSound from "../../assets/Windows_Startup_Sound.wav";
 
 function PcFrame() {
   const [count, setCount] = useState(0);

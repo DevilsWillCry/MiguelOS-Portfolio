@@ -1,10 +1,10 @@
 import React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ArrowDownUp from "./ArrowDownUp";
-import ThemeChangerIcon from "../assets/theme-changer-icon.svg";
+import ArrowDownUp from "../ui/ArrowDownUp";
+import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
 import { FaWindowClose, FaMinus, FaUserCircle } from "react-icons/fa";
-import addImageIcon from "../assets/add-image-icon.min.svg";
+import addImageIcon from "../../assets/add-image-icon.min.svg";
 
 
 export default function ThemeBackgroundChanger({

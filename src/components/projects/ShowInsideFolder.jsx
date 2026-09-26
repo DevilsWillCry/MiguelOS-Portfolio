@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
-import { arrayElements } from "../helpers/arrayCarousel";
+import { arrayElements } from "../../helpers/arrayCarousel";
 import { motion, AnimatePresence } from "framer-motion";
-import foldericon from "../assets/folder-icon.svg";
-import gifBoxEmpty from "../assets/box-empty-gif-icon.gif";
+import foldericon from "../../assets/folder-icon.svg";
+import gifBoxEmpty from "../../assets/box-empty-gif-icon.gif";
 import DescriptionProjectDesktop from "./DescriptionProjectDesktop";
-import readmeIcon from "../assets/readme-icon.svg";
+import readmeIcon from "../../assets/readme-icon.svg";
 
 export default function ShowInsideFolder({ file, containerRef, setReadme }) {
   const [folderOpened, setFolderOpened] = useState(false);

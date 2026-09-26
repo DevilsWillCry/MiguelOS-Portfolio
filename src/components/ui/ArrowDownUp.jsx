@@ -1,5 +1,5 @@
 import React from "react";
-import arrowDownIcon from "../assets/arrow-down-icon..min.svg";
+import arrowDownIcon from "../../assets/arrow-down-icon..min.svg";
 
 export default function ArrowDownUp({ isObserved }) {
   return (

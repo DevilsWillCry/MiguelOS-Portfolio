@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaWindowClose, FaMinus, FaUserCircle } from "react-icons/fa";
-import jsonIcon from "../assets/json-icon.svg";
-import JsonCodeBlock from "./JsonCodeBlock";
-import ArrowDownUp from "./ArrowDownUp";
+import jsonIcon from "../../assets/json-icon.svg";
+import JsonCodeBlock from "../code/JsonCodeBlock";
+import ArrowDownUp from "../ui/ArrowDownUp";
 
 export default function AboutMeDesktop({
   onMinimizeChange,

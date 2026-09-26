@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import audioRataMilton from "../assets/audio-ratiomilton.mp3";
-import videoRataMilton from "../assets/ratamilton-video.mp4";
+import audioRataMilton from "../../assets/audio-ratiomilton.mp3";
+import videoRataMilton from "../../assets/ratamilton-video.mp4";
 
 function TenorGifEmbed() {
 

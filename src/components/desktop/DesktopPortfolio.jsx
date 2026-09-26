@@ -1,18 +1,31 @@
 import { useEffect, useRef, useState } from "react";
 
-import AboutMeDesktop from "./AboutMeDesktop";
-import ProjectsDesktop from "./ProjectsDesktop";
-import ThemeBackgroundChanger from "./ThemeBackgroundChanger";
+import AboutMeDesktop from "../windows/AboutMeDesktop";
+import ProjectsDesktop from "../windows/ProjectsDesktop";
+import ThemeBackgroundChanger from "../windows/ThemeBackgroundChanger";
 
-import jsonIcon from "../assets/json-icon.svg";
-import ProjectIcon from "../assets/project_icon.png";
-import ThemeChangerIcon from "../assets/theme-changer-icon.svg";
-import windowsIcon from "../assets/home_icon.min.svg";
-import HomeDetail from "./HomeDetail";
+import jsonIcon from "../../assets/json-icon.svg";
+import ProjectIcon from "../../assets/project_icon.png";
+import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
+import windowsIcon from "../../assets/home_icon.min.svg";
+import mainBackground from "../../assets/main-background.jpg";
+import HomeDetail from "../taskbar/HomeDetail";
+
+// Tema por defecto: fondo de pantalla predeterminado de MiguelOS.
+// Mantiene la misma forma que los temas de ThemeBackgroundChanger
+// (type, gradient, imageUrl) para que todo el sistema de temas sea consistente.
+const defaultTheme = {
+  id: "default",
+  name: "MiguelOS Default",
+  gradient: "from-gray-900 to-gray-800",
+  color: "#0f172a",
+  type: "image",
+  imageUrl: mainBackground,
+};
 
 export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
   const screenRef = useRef(null);
-  const [theme, setTheme] = useState("bg-black");
+  const [theme, setTheme] = useState(defaultTheme);
   const [isMaximizedHome, setIsMaximizedHome] = useState(false);
 
   
@@ -64,7 +77,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
       ref={screenRef}
       className={`text-white font-mono overflow-hidden w-full h-full z-0 ${
         isOn ? "opacity-100" : "opacity-0 duration-1000 pointer-events-none"
-      } transition-all ${theme.type === "image" ? "bg-black bg-contain bg-center bg-no-repeat bg-fixed" : `bg-gradient-to-r ${theme.gradient}`}`}
+      } transition-all ${theme.type === "image" ? "bg-black bg-cover bg-center bg-no-repeat bg-fixed" : `bg-gradient-to-r ${theme.gradient}`}`}
       style={
         theme.type === "image"
           ? { backgroundImage: `url(${theme.imageUrl})` }
@@ -111,7 +124,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
         <div className="flex items-center gap-1 bg-gray-900/50 px-3 py-1 rounded-2xl border border-gray-700/30 shadow-lg">
           {/* Windows Start Button */}
           <button
-            className={`group relative bg-gradient-to-br ${theme} contrast-125 hover:contrast-100 text-white p-2.5 rounded-lg transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:shadow-blue-500/40 border border-gray-700/40 hover:border-gray-600/60 overflow-hidden`}
+            className={`group relative bg-gradient-to-br ${theme.gradient} contrast-125 hover:contrast-100 text-white p-2.5 rounded-lg transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:shadow-blue-500/40 border border-gray-700/40 hover:border-gray-600/60 overflow-hidden`}
             onClick={() => handleHomeMaximized()}
           >
             <img

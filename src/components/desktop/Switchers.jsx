@@ -1,6 +1,6 @@
 import React from "react";
 
-import PointerHand from "../assets/pointer-hand.webp"
+import PointerHand from "../../assets/pointer-hand.webp"
 
 const Switchers = ({ isOn, isOff, handleClick }) => {
   return (

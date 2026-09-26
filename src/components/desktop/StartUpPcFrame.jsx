@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ClipLoader } from "react-spinners";
-import { arrayProjectsDesktop } from "../helpers/arrayProjectsDesktop";
+import { arrayProjectsDesktop } from "../../helpers/arrayProjectsDesktop";
 
 export default function StartUpPcFrame({ isOn, isOff, setAudioOn }) {
   const lines = [
