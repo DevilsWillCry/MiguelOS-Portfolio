@@ -31,13 +31,11 @@ export default function ShutDownPcFrame({ isOn, isOff, count }) {
   }, [showFrameOff, isOn]);
 
   useEffect(() => {
-    console.log(isOn);
     if (!isOn) {
       setShowFrameOff(true);
       setVisibleLines([]);
     } else {
       clearTimeout(timeoutRef.current);
-      console.log("Evento ocurrió antes de que se ocultara el frame");
     }
   }, [isOn]);
 
@@ -55,8 +53,6 @@ export default function ShutDownPcFrame({ isOn, isOff, count }) {
 
     return () => clearInterval(interval);
   }, [isOn]);
-
-  console.log(showFrameOff);
 
   return (
     <div

@@ -35,7 +35,6 @@ export default function StartUpPcFrame({ isOn, isOff, setAudioOn }) {
   });
 
   useEffect(() => {
-    console.log(isOn);
     if (isOn) {
       setShowFrame(true);
       setVisibleLines([]);

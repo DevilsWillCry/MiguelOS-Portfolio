@@ -7,7 +7,6 @@ import DescriptionProjectDesktop from "./DescriptionProjectDesktop";
 import readmeIcon from "../assets/readme-icon.svg";
 
 export default function ShowInsideFolder({ file, containerRef, setReadme }) {
-  console.log(file);
   const [folderOpened, setFolderOpened] = useState(false);
 
   function filterTechnologies(technologies, arrayElements) {

@@ -47,8 +47,6 @@ function PcFrame() {
     };
   }, [isOn, isOffScreen]);
 
-  console.log(timeoutRef);
-
   useEffect(() => {
     if (isOn && audioOn) {
       const audio = new Audio(startUpWindowsSound);
@@ -68,7 +66,6 @@ function PcFrame() {
 
   }, [isOn, audioOn]);
 
-  console.log(audioOn);
   return (
     <>
       {/* Marco sobresaliente del Frame del PC en TOP*/}

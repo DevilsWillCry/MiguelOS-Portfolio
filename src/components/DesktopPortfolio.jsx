@@ -18,7 +18,6 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
   
   const handleHomeMaximized = () => {
     setIsMaximizedHome(!isMaximizedHome);
-    console.log("Home clicked", isMaximizedHome);
   };
 
   const [windows, setWindows] = useState({
@@ -28,7 +27,6 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
   });
 
   const handleWindowsMinimized = (nameObject) => {
-    console.log(nameObject);
     if (typeof nameObject != "string") return;
 
     setWindows({
@@ -41,7 +39,6 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
   };
 
   const handleWindowsMaximized = (nameObject) => {
-    console.log(nameObject);
     if (typeof nameObject != "string") return;
     // Al clickear la barra: siempre abre la ventana sin minimizar
     setWindows({
@@ -55,14 +52,12 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
 
 
   useEffect(() => {
-    console.log(windows);
     Object.keys(windows).forEach((key) => {
       if (windows[key].show) {
         setIsMaximizedHome(false);
       }
     });
   }, [windows]);
-  console.log(theme);
 
   return (
     <div

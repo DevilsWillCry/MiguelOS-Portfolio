@@ -18,7 +18,6 @@ export default function AboutMeDesktop({
   const [isObserved, setIsObserved] = useState(false);
 
   useEffect(() => {
-    console.log(isOn);
     if (!isOn) {
       setMaximize((prev) => ({
         ...prev,
@@ -29,14 +28,6 @@ export default function AboutMeDesktop({
       }));
     }
   }, [isOn]);
-
-  //show with console log width and height of containerRef and update when it changes
-  useEffect(() => {
-    console.log(
-      containerRef.current.offsetWidth,
-      containerRef.current.offsetHeight
-    );
-  }, [containerRef]);
 
   useEffect(() => {
     let observer;
@@ -49,10 +40,8 @@ export default function AboutMeDesktop({
 
       observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
-          console.log("Está intersectando");
           setIsObserved(true);
         } else {
-          console.log("No está intersectando");
           setIsObserved(false);
         }
       });

@@ -1,13 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 export default function DescriptionProjectDesktop({ content, isOn }) {
-  console.log(content);
-  
-
   return (
     <div className="prose prose-invert w-full h-full  p-3 text-[0.8rem] text-wrap">
       <ReactMarkdown
