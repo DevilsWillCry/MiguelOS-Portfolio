@@ -18,6 +18,17 @@ const desktopIcons = [
   { id: "theme",    icon: ThemeChangerIcon, label: "Cambiar temas" },
 ];
 
+// Dimensiones de cada celda del grid (deben coincidir con w-28 del icono)
+const ICON_W    = 112; // w-28 = 7rem = 112px
+const ICON_H    = 96;  // alto aproximado del bloque icono+texto
+const GRID_TOP  = 56;  // px desde el top (bajo el título "MiguelOS V1")
+const GRID_LEFT = 4;   // px desde el left
+
+const getPixelPos = (col, row) => ({
+  x: GRID_LEFT + col * ICON_W,
+  y: GRID_TOP  + row * ICON_H,
+});
+
 const defaultTheme = {
   id: "default",
   name: "MiguelOS Default",
@@ -42,6 +53,33 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
     projects: { show: false, minimized: false },
     theme: { show: false, minimized: false },
   });
+
+  // Posiciones en el grid: cada icono ocupa una celda { col, row }
+  const [iconGrid, setIconGrid] = useState(
+    () => desktopIcons.map((_, i) => ({ col: 0, row: i }))
+  );
+
+  const handleIconDragEnd = (dragIndex, info) => {
+    const { col: currentCol, row: currentRow } = iconGrid[dragIndex];
+    const { x: baseX, y: baseY } = getPixelPos(currentCol, currentRow);
+
+    const newX = baseX + info.offset.x;
+    const newY = baseY + info.offset.y;
+
+    const newCol = Math.max(0, Math.round((newX - GRID_LEFT) / ICON_W));
+    const newRow = Math.max(0, Math.round((newY - GRID_TOP)  / ICON_H));
+
+    const occupied = iconGrid.some(
+      (pos, i) => i !== dragIndex && pos.col === newCol && pos.row === newRow
+    );
+
+    if (!occupied) {
+      setIconGrid((prev) =>
+        prev.map((pos, i) => (i === dragIndex ? { col: newCol, row: newRow } : pos))
+      );
+    }
+    // Si está ocupada, animate:{x:0,y:0} devuelve el icono a su posición original
+  };
 
   const handleOpenWindow = (id) => {
     setWindows((prev) => ({
@@ -100,20 +138,23 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
         Miguel<span className="text-red-800 font-bold">OS</span> V1
       </div>
 
-      {/* Grid de iconos del escritorio */}
-      <div
-        className="absolute top-14 left-0 flex flex-col flex-wrap gap-1 p-1 pointer-events-none"
-        style={{ maxHeight: "calc(100% - 3.5rem - 3.5rem)" }}
-      >
-        {desktopIcons.map((item) => (
+      {/* Iconos del escritorio — cada uno se posiciona en su celda del grid */}
+      {desktopIcons.map((item, index) => {
+        const { x: posX, y: posY } = getPixelPos(
+          iconGrid[index].col,
+          iconGrid[index].row
+        );
+        return (
           <motion.div
             key={item.id}
             drag
             dragConstraints={screenRef}
             dragMomentum={false}
-            dragElastic={0.8}
-            dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-            className="flex flex-col items-center cursor-pointer hover:bg-white/10 p-3 rounded-xl w-28 select-none pointer-events-auto"
+            dragElastic={0}
+            animate={{ x: 0, y: 0 }}
+            onDragEnd={(_, info) => handleIconDragEnd(index, info)}
+            style={{ position: "absolute", left: posX, top: posY }}
+            className="flex flex-col items-center cursor-pointer hover:bg-white/10 p-3 rounded-xl w-28 select-none z-10"
             onClick={() => handleOpenWindow(item.id)}
           >
             <img
@@ -125,8 +166,8 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
               {item.label}
             </span>
           </motion.div>
-        ))}
-      </div>
+        );
+      })}
 
       {/* Acerca de mi */}
       <AboutMeDesktop
