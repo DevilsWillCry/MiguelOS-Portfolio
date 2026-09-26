@@ -6,7 +6,6 @@ import {
   FaUserCircle,
   FaArrowAltCircleLeft,
 } from "react-icons/fa";
-import ProjectIcon from "../../assets/project_icon.png";
 import FolderIcon from "../../assets/folder-icon.svg";
 import { arrayProjectsDesktop } from "../../helpers/arrayProjectsDesktop";
 import ShowInsideFolder from "../projects/ShowInsideFolder";
@@ -77,32 +76,6 @@ export default function ProjectsDesktop({
   
   return (
     <>
-      {/* Icono en el escritorio */}
-      <motion.div
-        drag
-        dragConstraints={containerRef}
-        dragElastic={0.8}
-        dragMomentum={false}
-        dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-        className="absolute w-28 h-auto flex flex-col items-center cursor-pointer hover:bg-white/10 p-3 rounded-xl min-xl:top-80 min-xl:left-10 max-md:top-20 max-md:left-36 min-lg:left-48 min-lg:top-10"
-        onClick={() => {
-          setMaximize((prev) => ({
-            ...prev,
-            projects: {
-              show: true,
-              minimized: true,
-            },
-          }));
-        }}
-      >
-        <img
-          src={ProjectIcon}
-          alt="Projects Icon"
-          className="w-10 h-10 pointer-events-none"
-        />
-        <span className="text-xs mt-1 break-all">Proyectos</span>
-      </motion.div>
-
       {/* Ventana Proyectos */}
       <AnimatePresence>
         {onMaximizeChange && (

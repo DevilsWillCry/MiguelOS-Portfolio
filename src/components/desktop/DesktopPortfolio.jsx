@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 import AboutMeDesktop from "../windows/AboutMeDesktop";
 import ProjectsDesktop from "../windows/ProjectsDesktop";
@@ -11,9 +12,12 @@ import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background.jpg";
 import HomeDetail from "../taskbar/HomeDetail";
 
-// Tema por defecto: fondo de pantalla predeterminado de MiguelOS.
-// Mantiene la misma forma que los temas de ThemeBackgroundChanger
-// (type, gradient, imageUrl) para que todo el sistema de temas sea consistente.
+const desktopIcons = [
+  { id: "about",    icon: jsonIcon,         label: "Sobre_mí.json" },
+  { id: "projects", icon: ProjectIcon,      label: "Proyectos"     },
+  { id: "theme",    icon: ThemeChangerIcon, label: "Cambiar temas" },
+];
+
 const defaultTheme = {
   id: "default",
   name: "MiguelOS Default",
@@ -38,6 +42,13 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
     projects: { show: false, minimized: false },
     theme: { show: false, minimized: false },
   });
+
+  const handleOpenWindow = (id) => {
+    setWindows((prev) => ({
+      ...prev,
+      [id]: { show: true, minimized: true },
+    }));
+  };
 
   const handleWindowsMinimized = (nameObject) => {
     if (typeof nameObject != "string") return;
@@ -87,6 +98,34 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
       {/* Escritorio */}
       <div className="absolute top-4 left-4 text-xl font-bold">
         Miguel<span className="text-red-800 font-bold">OS</span> V1
+      </div>
+
+      {/* Grid de iconos del escritorio */}
+      <div
+        className="absolute top-14 left-0 flex flex-col flex-wrap gap-1 p-1 pointer-events-none"
+        style={{ maxHeight: "calc(100% - 3.5rem - 3.5rem)" }}
+      >
+        {desktopIcons.map((item) => (
+          <motion.div
+            key={item.id}
+            drag
+            dragConstraints={screenRef}
+            dragMomentum={false}
+            dragElastic={0.8}
+            dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
+            className="flex flex-col items-center cursor-pointer hover:bg-white/10 p-3 rounded-xl w-28 select-none pointer-events-auto"
+            onClick={() => handleOpenWindow(item.id)}
+          >
+            <img
+              src={item.icon}
+              alt={item.label}
+              className="w-10 h-10 object-cover pointer-events-none"
+            />
+            <span className="text-xs mt-1 break-words text-center w-full">
+              {item.label}
+            </span>
+          </motion.div>
+        ))}
       </div>
 
       {/* Acerca de mi */}

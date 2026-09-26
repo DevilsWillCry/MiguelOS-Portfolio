@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaWindowClose, FaMinus, FaUserCircle } from "react-icons/fa";
-import jsonIcon from "../../assets/json-icon.svg";
 import JsonCodeBlock from "../code/JsonCodeBlock";
 import ArrowDownUp from "../ui/ArrowDownUp";
 
@@ -60,32 +59,6 @@ export default function AboutMeDesktop({
 
   return (
     <div>
-      {/* Icono en el escritorio */}
-      <motion.div
-        drag
-        dragConstraints={containerRef}
-        dragMomentum={false}
-        dragElastic={0.8}
-        dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-        className="absolute top-20 left-10 flex flex-col items-center cursor-pointer hover:bg-white/10 p-3 rounded-xl w-28 h-auto"
-        onClick={() => {
-          setMaximize((prev) => ({
-            ...prev,
-            about: {
-              show: true,
-              minimized: true,
-            },
-          }));
-        }}
-      >
-        <img
-          src={jsonIcon}
-          alt="user icon"
-          className="w-10 h-10 object-cover pointer-events-none"
-        />
-        <span className="text-xs mt-1 break-all">Sobre_mí.json</span>
-      </motion.div>
-
       {/* Ventana Sobre Mí */}
       <AnimatePresence>
         {onMaximizeChange && (

@@ -2,7 +2,6 @@ import React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowDownUp from "../ui/ArrowDownUp";
-import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
 import { FaWindowClose, FaMinus, FaUserCircle } from "react-icons/fa";
 import addImageIcon from "../../assets/add-image-icon.min.svg";
 
@@ -63,32 +62,6 @@ export default function ThemeBackgroundChanger({
 
   return (
     <>
-      {/* Icono en el escritorio */}
-      <motion.div
-        drag
-        dragConstraints={containerRef}
-        dragMomentum={false}
-        dragElastic={0.8}
-        dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-        className="absolute w-28 h-auto flex flex-col items-center cursor-pointer hover:bg-white/10 p-3 rounded-xl min-xl:top-1/4 min-xl:left-10 max-md:top-20 max-md:left-36 min-lg:left-48 min-lg:top-10"
-        onClick={() => {
-          setMaximize((prev) => ({
-            ...prev,
-            theme: {
-              show: true,
-              minimized: true,
-            },
-          }));
-        }}
-      >
-        <img
-          src={ThemeChangerIcon}
-          alt="theme changer icon"
-          className="w-10 h-10 object-cover pointer-events-none"
-        />
-        <span className="text-xs mt-1 break-all ">Cambiar temas</span>
-      </motion.div>
-
       {/* Ventana Cambiador de Tema */}
       <AnimatePresence>
         {onMaximizeChange && (
