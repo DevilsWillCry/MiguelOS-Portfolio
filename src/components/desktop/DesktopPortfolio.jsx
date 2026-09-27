@@ -11,6 +11,7 @@ import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
 import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background.jpg";
 import HomeDetail from "../taskbar/HomeDetail";
+import MobileNavBar from "../taskbar/MobileNavBar";
 
 const desktopIcons = [
   { id: "about",    icon: jsonIcon,         label: "Sobre_mí.json" },
@@ -33,15 +34,16 @@ const SNAP = { type: "spring", stiffness: 600, damping: 40 };
 
 // Icono individual del escritorio. La posición se maneja SOLO con motion values
 // (transform), que es la misma fuente que usa `drag`, evitando conflictos.
-function DesktopIcon({ item, index, cell, resolveCell, onOpen, containerRef }) {
+function DesktopIcon({ item, index, cell, resolveCell, onOpen, containerRef, isMobile }) {
   const initial = getPixelPos(cell.col, cell.row);
   const x = useMotionValue(initial.x);
   const y = useMotionValue(initial.y);
   const dragged = useRef(false);
 
   const handleDragEnd = (_, info) => {
-    dragged.current =
-      Math.abs(info.offset.x) > 4 || Math.abs(info.offset.y) > 4;
+    if (Math.abs(info.offset.x) > 4 || Math.abs(info.offset.y) > 4) {
+      dragged.current = true;
+    }
 
     const col = Math.max(0, Math.round((x.get() - GRID_LEFT) / ICON_W));
     const row = Math.max(0, Math.round((y.get() - GRID_TOP) / ICON_H));
@@ -53,11 +55,9 @@ function DesktopIcon({ item, index, cell, resolveCell, onOpen, containerRef }) {
     animate(y, target.y, SNAP);
   };
 
-  const handleClick = () => {
-    if (dragged.current) {
-      dragged.current = false;
-      return;
-    }
+  // Abre la app, salvo que la interacción haya sido un arrastre real.
+  const handleOpen = () => {
+    if (dragged.current) return;
     onOpen(item.id);
   };
 
@@ -68,8 +68,12 @@ function DesktopIcon({ item, index, cell, resolveCell, onOpen, containerRef }) {
       dragMomentum={false}
       dragElastic={0.15}
       style={{ position: "absolute", top: 0, left: 0, x, y }}
+      onPointerDown={() => {
+        dragged.current = false;
+      }}
       onDragEnd={handleDragEnd}
-      onClick={handleClick}
+      onClick={isMobile ? handleOpen : undefined}
+      onDoubleClick={isMobile ? undefined : handleOpen}
       className="flex flex-col items-center cursor-pointer hover:bg-white/10 p-3 rounded-xl w-28 select-none z-10"
     >
       <img
@@ -93,10 +97,11 @@ const defaultTheme = {
   imageUrl: mainBackground,
 };
 
-export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
+export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobile }) {
   const screenRef = useRef(null);
   const [theme, setTheme] = useState(defaultTheme);
   const [isMaximizedHome, setIsMaximizedHome] = useState(false);
+  const [showRecents, setShowRecents] = useState(false);
 
   
   const handleHomeMaximized = () => {
@@ -162,6 +167,40 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
     });
   };
 
+  // --- Handlers de la barra de navegación móvil (estilo Android) ---
+
+  // Atrás: oculta la app en primer plano y la deja en recientes → escritorio.
+  const handleMobileBack = () => {
+    setWindows((prev) => {
+      const frontKey = Object.keys(prev).find((k) => prev[k].show);
+      if (!frontKey) return prev;
+      return { ...prev, [frontKey]: { show: false, minimized: true } };
+    });
+  };
+
+  // Inicio: oculta todas las apps (siguen en recientes) → escritorio con iconos.
+  const handleMobileHome = () => {
+    setWindows((prev) => {
+      const next = {};
+      Object.keys(prev).forEach((k) => {
+        next[k] = { show: false, minimized: prev[k].show || prev[k].minimized };
+      });
+      return next;
+    });
+    setShowRecents(false);
+  };
+
+  // Trae una app al frente desde el overlay de recientes.
+  const handleMobileSelectApp = (id) => {
+    handleOpenWindow(id);
+    setShowRecents(false);
+  };
+
+  // Cierra una app por completo desde recientes.
+  const handleMobileCloseApp = (id) => {
+    setWindows((prev) => ({ ...prev, [id]: { show: false, minimized: false } }));
+  };
+
 
   useEffect(() => {
     Object.keys(windows).forEach((key) => {
@@ -198,6 +237,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
           resolveCell={resolveCell}
           onOpen={handleOpenWindow}
           containerRef={screenRef}
+          isMobile={isMobile}
         />
       ))}
 
@@ -208,6 +248,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
         setMaximize={setWindows}
         isOn={isOn}
         containerRef={screenRef}
+        isMobile={isMobile}
       />
 
       {/* Projectos en el escritorio */}
@@ -217,6 +258,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
         setMaximize={setWindows}
         isOn={isOn}
         containerRef={screenRef}
+        isMobile={isMobile}
       />
 
       {/* Cambiador de tema en el escritorio */}
@@ -228,9 +270,11 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
         containerRef={screenRef}
         theme={theme}
         setTheme={setTheme}
+        isMobile={isMobile}
       />
 
-      {/* Barra de tareas - Windows 11 Modern Style */}
+      {/* Barra de tareas - Windows 11 Modern Style (solo escritorio) */}
+      {!isMobile && (
       <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-b from-gray-950/90 to-gray-900/95 flex items-center justify-center px-0 max-md:hidden border-t border-gray-700/40 backdrop-blur-xl shadow-2xl z-[50]">
         {/* Contenedor central */}
         <div className="flex items-center gap-1 bg-gray-900/50 px-3 py-1 rounded-2xl border border-gray-700/30 shadow-lg">
@@ -297,6 +341,21 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff }) {
           })}
         </div>
       </div>
+      )}
+
+      {/* Barra de navegación inferior - Modo móvil/tablet (estilo Android) */}
+      {isMobile && (
+        <MobileNavBar
+          apps={desktopIcons}
+          windows={windows}
+          showRecents={showRecents}
+          onBack={handleMobileBack}
+          onHome={handleMobileHome}
+          onToggleRecents={() => setShowRecents((v) => !v)}
+          onSelectApp={handleMobileSelectApp}
+          onCloseApp={handleMobileCloseApp}
+        />
+      )}
     </div>
   );
 }

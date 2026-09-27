@@ -3,6 +3,8 @@ import Switchers from "./Switchers";
 import DesktopPortfolio from "./DesktopPortfolio";
 import StartUpPcFrame from "./StartUpPcFrame";
 import ShutDownPcFrame from "./ShutDownPcFrame";
+import PhoneFrame from "./PhoneFrame";
+import useDeviceType from "../../hooks/useDeviceType";
 import startUpWindowsSound from "../../assets/Windows_Startup_Sound.wav";
 
 function PcFrame() {
@@ -11,6 +13,7 @@ function PcFrame() {
   const [isOffScreen, setIsOffScreen] = useState(false);
   const [audioOn, setAudioOn] = useState(false);
   const timeoutRef = useRef(null);
+  const { isMobile } = useDeviceType();
   const handleClick = () => {
     setIsOn(!isOn);
     setCount(count + 1);
@@ -66,6 +69,26 @@ function PcFrame() {
 
   }, [isOn, audioOn]);
 
+  // Contenido de la pantalla del OS (compartido por ambos marcos)
+  const screen = (
+    <>
+      {/* Pantalla de encendido */}
+      <StartUpPcFrame isOn={isOn} isOff={isOffScreen} setAudioOn={setAudioOn} />
+
+      {/* Pantalla del OS */}
+      <DesktopPortfolio isOn={isOn} isOff={isOffScreen} isMobile={isMobile} />
+
+      {/* Pantalla de apagado */}
+      <ShutDownPcFrame isOn={isOn} isOff={isOffScreen} count={count} />
+    </>
+  );
+
+  // Modo móvil/tablet: marco de teléfono a pantalla completa
+  if (isMobile) {
+    return <PhoneFrame isOn={isOn}>{screen}</PhoneFrame>;
+  }
+
+  // Modo escritorio: marco de monitor
   return (
     <>
       {/* Marco sobresaliente del Frame del PC en TOP*/}
@@ -76,18 +99,7 @@ function PcFrame() {
             isOn ? "bg-none animate-tv-flicker" : "bg-black"
           }`}
         >
-          {/* Pantalla de encendido del PC */}
-          <StartUpPcFrame
-            isOn={isOn}
-            isOff={isOffScreen}
-            setAudioOn={setAudioOn}
-          />
-
-          {/* Pantalla del PC */}
-          <DesktopPortfolio isOn={isOn} isOff={isOffScreen} />
-
-          {/* Pantalla de apagado del PC */}
-          <ShutDownPcFrame isOn={isOn} isOff={isOffScreen} count={count} />
+          {screen}
         </div>
 
         {/* Lente de la cámara frontal del PC*/}

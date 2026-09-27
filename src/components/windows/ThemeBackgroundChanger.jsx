@@ -2,8 +2,9 @@ import React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowDownUp from "../ui/ArrowDownUp";
-import { FaWindowClose, FaMinus, FaUserCircle } from "react-icons/fa";
+import { FaWindowClose, FaMinus, FaWindowMaximize, FaWindowRestore } from "react-icons/fa";
 import addImageIcon from "../../assets/add-image-icon.min.svg";
+import { getWindowClass } from "../../helpers/windowClass";
 
 
 export default function ThemeBackgroundChanger({
@@ -14,11 +15,16 @@ export default function ThemeBackgroundChanger({
   containerRef,
   theme,
   setTheme,
+  isMobile,
 }) {
   const scrollContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const [selectedTheme, setSelectedTheme] = useState(0);
   const [customImage, setCustomImage] = useState(null);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  const baseClass =
+    "absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[60%] min-xl:top-52 min-xl:left-80 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] flex flex-col";
 
   // Manejar carga de imagen
   const handleImageUpload = (e) => {
@@ -66,12 +72,12 @@ export default function ThemeBackgroundChanger({
       <AnimatePresence>
         {onMaximizeChange && (
           <motion.div
-            drag
+            drag={!isMobile && !isMaximized}
             dragConstraints={containerRef}
             dragMomentum={false}
             dragElastic={0.8}
             dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-            className="absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[60%] min-xl:top-52 min-xl:left-80 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] flex flex-col"
+            className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
@@ -81,7 +87,7 @@ export default function ThemeBackgroundChanger({
             {/* Barra superior */}
             <div className="sticky top-0 w-full bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30 flex-shrink-0">
               <span className="text-sm">Cambiar temas</span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <FaMinus
                   className="text-yellow-400 cursor-pointer"
                   onClick={() => {
@@ -95,9 +101,22 @@ export default function ThemeBackgroundChanger({
                     }));
                   }}
                 />
+                {!isMobile &&
+                  (isMaximized ? (
+                    <FaWindowRestore
+                      className="text-green-400 cursor-pointer text-sm"
+                      onClick={() => setIsMaximized(false)}
+                    />
+                  ) : (
+                    <FaWindowMaximize
+                      className="text-green-400 cursor-pointer text-sm"
+                      onClick={() => setIsMaximized(true)}
+                    />
+                  ))}
                 <FaWindowClose
                   className="text-red-500 cursor-pointer"
                   onClick={() => {
+                    setIsMaximized(false);
                     setMaximize((prev) => ({
                       ...prev,
                       theme: {

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaWindowClose, FaMinus, FaUserCircle } from "react-icons/fa";
+import { FaWindowClose, FaMinus, FaWindowMaximize, FaWindowRestore } from "react-icons/fa";
 import JsonCodeBlock from "../code/JsonCodeBlock";
 import ArrowDownUp from "../ui/ArrowDownUp";
+import { getWindowClass } from "../../helpers/windowClass";
 
 export default function AboutMeDesktop({
   onMinimizeChange,
@@ -11,10 +12,15 @@ export default function AboutMeDesktop({
   setMaximize,
   isOn,
   containerRef,
+  isMobile,
 }) {
   const loadMoreRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [isObserved, setIsObserved] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  const baseClass =
+    "absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[60%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] flex flex-col";
 
   useEffect(() => {
     if (!isOn) {
@@ -63,12 +69,12 @@ export default function AboutMeDesktop({
       <AnimatePresence>
         {onMaximizeChange && (
           <motion.div
-            drag
+            drag={!isMobile && !isMaximized}
             dragConstraints={containerRef}
             dragMomentum={false}
             dragElastic={0.8}
             dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
-            className="absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[60%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] flex flex-col"
+            className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
@@ -77,7 +83,7 @@ export default function AboutMeDesktop({
             {/* Barra superior */}
             <div className="sticky top-0 w-full bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30 flex-shrink-0">
               <span className="text-sm">Sobre_mí.json</span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <FaMinus
                   className="text-yellow-400 cursor-pointer"
                   onClick={() => {
@@ -91,9 +97,22 @@ export default function AboutMeDesktop({
                     }));
                   }}
                 />
+                {!isMobile &&
+                  (isMaximized ? (
+                    <FaWindowRestore
+                      className="text-green-400 cursor-pointer text-sm"
+                      onClick={() => setIsMaximized(false)}
+                    />
+                  ) : (
+                    <FaWindowMaximize
+                      className="text-green-400 cursor-pointer text-sm"
+                      onClick={() => setIsMaximized(true)}
+                    />
+                  ))}
                 <FaWindowClose
                   className="text-red-500 cursor-pointer"
                   onClick={() => {
+                    setIsMaximized(false);
                     setMaximize((prev) => ({
                       ...prev,
                       about: {

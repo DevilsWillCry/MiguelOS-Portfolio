@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FaWindowClose,
   FaMinus,
-  FaUserCircle,
+  FaWindowMaximize,
+  FaWindowRestore,
   FaArrowAltCircleLeft,
 } from "react-icons/fa";
 import FolderIcon from "../../assets/folder-icon.svg";
@@ -11,6 +12,7 @@ import { arrayProjectsDesktop } from "../../helpers/arrayProjectsDesktop";
 import ShowInsideFolder from "../projects/ShowInsideFolder";
 import DescriptionProjectDesktop from "../projects/DescriptionProjectDesktop";
 import ArrowDownUp from "../ui/ArrowDownUp";
+import { getWindowClass } from "../../helpers/windowClass";
 
 export default function ProjectsDesktop({
   onMinimizeChange,
@@ -18,6 +20,7 @@ export default function ProjectsDesktop({
   setMaximize,
   isOn,
   containerRef,
+  isMobile,
 }) {
   const [activeProject, setActiveProject] = useState(null);
   const [showProjects, setShowProjects] = useState(null);
@@ -27,6 +30,10 @@ export default function ProjectsDesktop({
   const loadMoreRef = useRef(null);
 
   const [isObserved, setIsObserved] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  const baseClass =
+    "absolute min-xl:top-[12rem] min-xl:left-[25rem] bg-gray-900 rounded-xl shadow-xl w-[300px] h-[250px] z-20 max-md:top-32 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[75%] max-md:h-[40%] min-lg:top-[1rem] min-lg:left-[22rem]";
 
   useEffect(() => {
     if (!isOn) {
@@ -80,17 +87,17 @@ export default function ProjectsDesktop({
       <AnimatePresence>
         {onMaximizeChange && (
           <motion.div
-            drag
+            drag={!isMobile && !isMaximized}
             dragConstraints={containerRef}
             dragElastic={0.8}
             dragMomentum={false}
-            className={`absolute min-xl:top-[12rem] min-xl:left-[25rem] bg-gray-900 rounded-xl shadow-xl w-[300px] h-[250px] z-20 max-md:top-32 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[75%] max-md:h-[40%] min-lg:top-[1rem] min-lg:left-[22rem] `}
+            className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
             transition={{ duration: 0.5 }}
           >
-            
+
             {/* Barra superior */}
             <div className="relative bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move max-md:px-4 ">
               {activeProject != null && (
@@ -109,7 +116,7 @@ export default function ProjectsDesktop({
               >
                 {showProjects == null && activeProject == null && "Proyectos"}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <FaMinus
                   className="text-yellow-400 cursor-pointer hover:text-yellow-800"
                   onClick={() => {
@@ -123,9 +130,22 @@ export default function ProjectsDesktop({
                     }));
                   }}
                 />
+                {!isMobile &&
+                  (isMaximized ? (
+                    <FaWindowRestore
+                      className="text-green-400 cursor-pointer text-sm hover:text-green-700"
+                      onClick={() => setIsMaximized(false)}
+                    />
+                  ) : (
+                    <FaWindowMaximize
+                      className="text-green-400 cursor-pointer text-sm hover:text-green-700"
+                      onClick={() => setIsMaximized(true)}
+                    />
+                  ))}
                 <FaWindowClose
                   className="text-red-500 cursor-pointer hover:text-red-800"
                   onClick={() => {
+                    setIsMaximized(false);
                     setMaximize((prev) => ({
                       ...prev,
                       projects: {
@@ -206,7 +226,7 @@ export default function ProjectsDesktop({
       <AnimatePresence>
         {readmeClicked && (
           <motion.div
-            drag
+            drag={!isMobile}
             dragConstraints={containerRef}
             dragElastic={0.8}
             dragMomentum={false}
@@ -215,7 +235,11 @@ export default function ProjectsDesktop({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
             transition={{ duration: 0.5 }}
-            className={`absolute min-xl:top-[6rem] min-xl:left-[40rem] bg-gray-900 rounded-xl shadow-xl w-[500px] h-[450px] z-10 max-md:top-40 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[22rem] overflow-auto scrollbar-hide`}
+            className={
+              isMobile
+                ? "absolute top-0 left-0 w-full h-[calc(100%-3.5rem)] bg-gray-900 z-30 overflow-auto scrollbar-hide"
+                : "absolute min-xl:top-[6rem] min-xl:left-[40rem] bg-gray-900 rounded-xl shadow-xl w-[500px] h-[450px] z-10 max-md:top-40 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[22rem] overflow-auto scrollbar-hide"
+            }
           >
             <div className="sticky top-0 left-0 bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-pointer max-md:px-4 w-full">
               <span
