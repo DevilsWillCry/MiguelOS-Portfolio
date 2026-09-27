@@ -21,6 +21,13 @@ function PcFrame() {
     setCount(count + 1);
   };
 
+  // Apagado explícito desde el escritorio (menú de inicio): solo apaga si está encendido
+  const handlePowerOff = () => {
+    if (!isOn) return;
+    setIsOn(false);
+    setCount(count + 1);
+  };
+
   useEffect(() => {
     // Si la pantalla está apagada, inicia el timeout de 5 segundos
     if (!isOn) {
@@ -78,7 +85,12 @@ function PcFrame() {
       <StartUpPcFrame isOn={isOn} isOff={isOffScreen} setAudioOn={setAudioOn} />
 
       {/* Pantalla del OS */}
-      <DesktopPortfolio isOn={isOn} isOff={isOffScreen} isMobile={isMobile} />
+      <DesktopPortfolio
+        isOn={isOn}
+        isOff={isOffScreen}
+        isMobile={isMobile}
+        onPowerOff={handlePowerOff}
+      />
 
       {/* Pantalla de apagado */}
       <ShutDownPcFrame isOn={isOn} isOff={isOffScreen} count={count} />

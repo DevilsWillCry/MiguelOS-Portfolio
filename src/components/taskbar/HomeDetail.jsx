@@ -9,6 +9,7 @@ export default function HomeDetail({
   onHomeMaximizedIcon,
   icons,
   labels,
+  onShutdown,
 }) {
   const [query, setQuery] = useState("");
 
@@ -99,10 +100,13 @@ export default function HomeDetail({
               <FaRegUserCircle className="text-sm" />
               <span>Visitante</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-              <FaPowerOff className="text-red-500/70" />
-              <span>MiguelOS v1</span>
-            </div>
+            <button
+              onClick={onShutdown}
+              className="group flex items-center gap-2 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-red-600/80 border border-white/10 hover:border-red-500 rounded-lg px-3 py-1.5 transition-all active:scale-95"
+            >
+              <FaPowerOff className="text-red-500 group-hover:text-white transition-colors" />
+              <span>Apagar</span>
+            </button>
           </div>
         </motion.div>
       )}

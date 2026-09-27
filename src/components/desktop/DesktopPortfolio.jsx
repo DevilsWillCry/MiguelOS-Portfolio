@@ -104,7 +104,7 @@ const defaultTheme = {
   imageUrl: mainBackground,
 };
 
-export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobile }) {
+export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobile, onPowerOff }) {
   const screenRef = useRef(null);
   const [theme, setTheme] = useState(defaultTheme);
   const [isMaximizedHome, setIsMaximizedHome] = useState(false);
@@ -149,6 +149,12 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
       ...prev,
       [id]: { show: true, minimized: true },
     }));
+  };
+
+  // Apagar desde el menú de inicio: cierra el menú y dispara la secuencia de apagado
+  const handleShutdown = () => {
+    setIsMaximizedHome(false);
+    onPowerOff?.();
   };
 
   const handleWindowsMinimized = (nameObject) => {
@@ -309,7 +315,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
             <div className="absolute inset-0 rounded-lg bg-white/0 group-hover:bg-white/10 transition-all"></div>
 
           </button>
-            <HomeDetail isOn={isOn} isMaximizedHome={isMaximizedHome} items={windows} onHomeMaximizedIcon={handleWindowsMaximized} icons={iconById} labels={labelById} />
+            <HomeDetail isOn={isOn} isMaximizedHome={isMaximizedHome} items={windows} onHomeMaximizedIcon={handleWindowsMaximized} icons={iconById} labels={labelById} onShutdown={handleShutdown} />
 
           {/* Divisor visual */}
           <div className="h-6 w-px bg-gradient-to-b from-transparent via-gray-600/40 to-transparent mx-1"></div>
