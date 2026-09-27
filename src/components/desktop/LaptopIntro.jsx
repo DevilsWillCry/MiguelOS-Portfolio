@@ -12,7 +12,7 @@ const ZOOM_DURATION = 1.4; // s del acercamiento a la pantalla
 // easeInOutCubic
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-function LaptopModel({ onZoomHalfway, onFinished }) {
+function LaptopModel({ onZoomHalfway }) {
   const group = useRef();
   const hinge = useRef();
   const screen = useRef();
@@ -65,13 +65,12 @@ function LaptopModel({ onZoomHalfway, onFinished }) {
       // La pantalla se enciende cada vez más fuerte (efecto de "entrar")
       if (screenMat.current) screenMat.current.emissiveIntensity = 1.2 + e * 4.0;
 
-      if (!halfDone.current && z >= 0.75) {
+      if (!halfDone.current && z >= 0.6) {
         halfDone.current = true;
         onZoomHalfway();
       }
       if (z >= 1) {
         phase.current = "done";
-        onFinished();
       }
     }
   });
@@ -115,19 +114,24 @@ function LaptopModel({ onZoomHalfway, onFinished }) {
   );
 }
 
+const FADE_DURATION = 0.85; // s del crossfade final
+
 export default function LaptopIntro({ onFinished }) {
   const [fading, setFading] = useState(false);
 
-  // Al acercarse casi del todo a la pantalla, funde a negro para empatar con el 2D
-  const handleZoomHalfway = () => setFading(true);
-  const handleFinished = () => onFinished();
+  // Cerca del final del zoom, arranca el crossfade (revela el escritorio detrás)
+  // y desmonta la intro justo al terminar el fundido, sin cortar la animación.
+  const handleZoomHalfway = () => {
+    setFading(true);
+    setTimeout(() => onFinished(), FADE_DURATION * 1000);
+  };
 
   return (
     <motion.div
       className="fixed inset-0 z-[200] bg-black"
       initial={{ opacity: 1 }}
       animate={{ opacity: fading ? 0 : 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: FADE_DURATION, ease: "easeInOut" }}
     >
       <Canvas camera={{ position: [0, 1.1, 6], fov: 45 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
@@ -136,10 +140,7 @@ export default function LaptopIntro({ onFinished }) {
           <directionalLight position={[4, 6, 4]} intensity={1.3} />
           <pointLight position={[-4, -2, -4]} intensity={0.7} color="#ef4444" />
           <Stars radius={60} depth={30} count={1500} factor={4} fade speed={1} />
-          <LaptopModel
-            onZoomHalfway={handleZoomHalfway}
-            onFinished={handleFinished}
-          />
+          <LaptopModel onZoomHalfway={handleZoomHalfway} />
         </Suspense>
       </Canvas>
 

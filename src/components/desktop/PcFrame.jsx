@@ -90,13 +90,8 @@ function PcFrame() {
     return <PhoneFrame isOn={isOn}>{screen}</PhoneFrame>;
   }
 
-  // Intro 3D: portátil que se abre y luego funde al escritorio 2D (solo escritorio)
-  if (!introDone) {
-    return <LaptopIntro onFinished={() => setIntroDone(true)} />;
-  }
-
   // Modo escritorio: marco de monitor
-  return (
+  const monitor = (
     <>
       {/* Marco sobresaliente del Frame del PC en TOP*/}
       <div className="before:w-[90%] before:h-[90%] before:fixed before:border-solid before:border-t-[5px]  before:border-b-[5px] before:rounded-t-xl before:border-gray-400 before:top-0 before:z-[60] before:left-[50%] before:translate-x-[-50%] before:pointer-events-none items-center">
@@ -116,6 +111,15 @@ function PcFrame() {
       <div className=" border-gray-500 flex flex-row items-center justify-end px-5 fixed bottom-3 right-[50%] translate-x-[50%] w-[95%] h-[9%] z-[60] bg-[#222222] rounded-br-2xl rounded-bl-2xl max-md:w-[90%]">
         <Switchers isOn={isOn} isOff={isOffScreen} handleClick={handleClick} />
       </div>
+    </>
+  );
+
+  // El monitor 2D se monta detrás desde el inicio; la intro 3D va encima y se
+  // desvanece revelándolo (crossfade), evitando un corte de escena brusco.
+  return (
+    <>
+      {monitor}
+      {!introDone && <LaptopIntro onFinished={() => setIntroDone(true)} />}
     </>
   );
 }
