@@ -62,13 +62,22 @@ function MiguModel({ gestureRef, dragging }) {
     return size.y > 0 ? TARGET_HEIGHT / size.y : 1;
   }, [scene]);
 
-  // Huesos del brazo derecho + su rotación de bind (pose natural)
+  // Huesos del brazo derecho + su rotación de bind (pose natural).
+  // GLTFLoader puede sanitizar los nombres (quitar ":"), así que buscamos por
+  // sufijo del nombre "limpio" para encontrarlos igual.
   const arm = useMemo(() => {
-    const get = (n) => scene.getObjectByName(n);
+    const clean = (s) => (s || "").replace(/[^a-z]/gi, "").toLowerCase();
+    const find = (suffix) => {
+      let found = null;
+      scene.traverse((o) => {
+        if (!found && clean(o.name).endsWith(suffix)) found = o;
+      });
+      return found;
+    };
     const bones = {
-      arm: get("mixamorig:RightArm"),
-      fore: get("mixamorig:RightForeArm"),
-      hand: get("mixamorig:RightHand"),
+      arm: find("rightarm"),
+      fore: find("rightforearm"),
+      hand: find("righthand"),
     };
     const bind = {
       arm: bones.arm?.quaternion.clone(),
