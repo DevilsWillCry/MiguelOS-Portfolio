@@ -77,7 +77,7 @@ export default function ThreeDViewer({
   }, [isOn]);
 
   const baseClass =
-    "absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[45%] min-xl:h-[55%] min-xl:top-40 min-xl:left-64 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[2rem] min-lg:left-[10rem] min-lg:w-[50%] min-lg:h-[55%] flex flex-col";
+    "absolute top-24 left-24 w-[50%] h-[55%] bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[45%] min-xl:h-[55%] min-xl:top-40 min-xl:left-64 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[2rem] min-lg:left-[10rem] min-lg:w-[50%] min-lg:h-[55%] flex flex-col";
 
   return (
     <AnimatePresence>
@@ -136,10 +136,15 @@ export default function ThreeDViewer({
           {/* Lienzo 3D. stopPropagation evita que arrastrar la escena mueva la ventana:
               la ventana se arrastra por la barra de título, y aquí se orbita el modelo. */}
           <div
-            className="relative flex-1 overflow-hidden rounded-b-xl"
+            className="relative flex-1 min-h-0 overflow-hidden rounded-b-xl"
             onPointerDown={(e) => e.stopPropagation()}
           >
-            <Canvas camera={{ position: [0, 0, 6], fov: 45 }} dpr={[1, 2]}>
+            <Canvas
+              camera={{ position: [0, 0, 6], fov: 45 }}
+              dpr={[1, 2]}
+              resize={{ debounce: 0 }}
+              style={{ width: "100%", height: "100%", display: "block" }}
+            >
               <Suspense fallback={null}>
                 <Scene />
               </Suspense>
