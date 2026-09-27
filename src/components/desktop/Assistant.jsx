@@ -1,20 +1,12 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF, useAnimations, Center } from "@react-three/drei";
+import { useGLTF, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { FaTimes, FaArrowRight } from "react-icons/fa";
 
 const MODEL_URL = "/modelo/migu.glb";
-
-// Idles que se ejecutan al azar (Hanging se reserva para el arrastre)
-const IDLE_POOL = [
-  "Idle_Neutral",
-  "Idle_Drunk",
-  "Idle_Dwarf",
-  "Idle_Offensive",
-  "Idle_Warrior",
-];
+const TARGET_HEIGHT = 2.6; // alto deseado en el encuadre (auto-ajuste de escala)
 
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
@@ -33,20 +25,13 @@ const CONTEXT = {
   model3d: "¡El Visor 3D! Arrastra para rotar el modelo y usa la rueda para zoom.",
 };
 
-// Modelo riggeado de Migu con animaciones de Mixamo:
-// - Idle (Neutral Idle) en bucle
-// - Wave (saludo) transitorio en eventos
-// - Hang (Hanging Idle) mientras se arrastra a Migu
-const TARGET_HEIGHT = 2.6; // alto deseado en el encuadre (auto-ajuste de escala)
-
-function MiguModel({ waveNonce, dragging }) {
+// Modelo ESTÁTICO (en su pose natural, sin animación esquelética → sin deformación).
+// El movimiento se hace por transformación de todo el cuerpo (flotar, gestos, vaivén).
+function MiguModel({ gestureRef, dragging }) {
   const group = useRef();
-  const { scene, animations } = useGLTF(MODEL_URL);
-  const { actions, mixer } = useAnimations(animations, group);
+  const { scene } = useGLTF(MODEL_URL);
 
-  // Auto-escala + ajuste de material. El GLB viene con metallicFactor=1 (default
-  // glTF) y sin mapa de entorno, por lo que el metal se renderiza NEGRO. Bajamos
-  // la metalicidad para que se vea el color de la textura.
+  // Auto-escala + material (baja metalicidad para que no se vea negro)
   const fitScale = useMemo(() => {
     scene.traverse((o) => {
       if (!o.isMesh) return;
@@ -55,7 +40,6 @@ function MiguModel({ waveNonce, dragging }) {
         if (!m) return;
         m.metalness = 0.15;
         m.roughness = 0.8;
-        m.envMapIntensity = 1;
         m.needsUpdate = true;
       });
     });
@@ -66,88 +50,42 @@ function MiguModel({ waveNonce, dragging }) {
     box.getSize(size);
     return size.y > 0 ? TARGET_HEIGHT / size.y : 1;
   }, [scene]);
-  const currentRef = useRef(null);
-  const draggingRef = useRef(dragging);
-  draggingRef.current = dragging;
 
-  const idleTimer = useRef(null);
-
-  // Reproduce una acción con crossfade suave desde la actual
-  const fadeTo = (name, { loop = THREE.LoopRepeat, reps = Infinity, timeScale = 1, fade = 0.5 } = {}) => {
-    const next = actions?.[name];
-    if (!next) return null;
-    const prev = currentRef.current;
-    next.reset();
-    next.setLoop(loop, reps);
-    next.clampWhenFinished = false;
-    next.timeScale = timeScale;
-    next.setEffectiveWeight(1);
-    next.fadeIn(fade).play();
-    if (prev && prev !== next) prev.fadeOut(fade);
-    currentRef.current = next;
-    return next;
-  };
-
-  // Idle aleatorio EN BUCLE; se reprograma el cambio tras ~una vuelta
-  const playRandomIdle = () => {
-    clearTimeout(idleTimer.current);
-    const pool = IDLE_POOL.filter((n) => actions?.[n]);
-    if (pool.length === 0) return;
-    const prevName = currentRef.current?.getClip().name;
-    const choices = pool.length > 1 ? pool.filter((n) => n !== prevName) : pool;
-    const name = choices[Math.floor(Math.random() * choices.length)];
-    const act = fadeTo(name, { loop: THREE.LoopRepeat });
-    const dur = act?.getClip().duration || 7;
-    idleTimer.current = setTimeout(() => {
-      if (!draggingRef.current) playRandomIdle();
-    }, Math.max(4, dur) * 1000);
-  };
-
-  // Arranque
-  useEffect(() => {
-    if (actions) playRandomIdle();
-    return () => clearTimeout(idleTimer.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actions]);
-
-  // Arrastre: Hanging en bucle / al soltar, vuelve a idles aleatorios
-  useEffect(() => {
-    if (!actions) return;
-    if (dragging) {
-      clearTimeout(idleTimer.current);
-      fadeTo("Hang", { loop: THREE.LoopRepeat });
-    } else {
-      playRandomIdle();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dragging, actions]);
-
-  // Saludo transitorio (no interrumpe si está siendo arrastrado)
-  useEffect(() => {
-    if (waveNonce === 0 || draggingRef.current) return;
-    clearTimeout(idleTimer.current);
-    fadeTo("Wave", { loop: THREE.LoopRepeat, reps: 3, timeScale: 0.9, fade: 0.25 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [waveNonce]);
-
-  // El saludo (reps finitas) termina → volver a un idle aleatorio
-  useEffect(() => {
-    if (!mixer) return;
-    const onFinished = (e) => {
-      if (draggingRef.current) return;
-      if (e.action !== currentRef.current) return;
-      playRandomIdle();
-    };
-    mixer.addEventListener("finished", onFinished);
-    return () => mixer.removeEventListener("finished", onFinished);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mixer]);
-
-  // Flotación sutil
   useFrame((state) => {
-    if (group.current) {
-      group.current.position.y = Math.sin(state.clock.elapsedTime * 1.6) * 0.04;
+    const o = group.current;
+    if (!o) return;
+    const t = state.clock.elapsedTime;
+
+    // Idle base: flota y se balancea
+    let rotX = 0;
+    let rotY = Math.sin(t * 0.6) * 0.18;
+    let rotZ = 0;
+    let posY = Math.sin(t * 1.6) * 0.05;
+
+    // Gesto activo
+    const g = gestureRef.current;
+    if (g && g.type !== "idle") {
+      if (g.t0 == null) g.t0 = t;
+      const dt = t - g.t0;
+      const dur = 1.2;
+      const decay = Math.max(0, 1 - dt / dur);
+      if (g.type === "greet") {
+        rotZ = Math.sin(dt * 14) * 0.2 * decay;
+        posY += Math.abs(Math.sin(dt * 7)) * 0.14 * decay;
+      } else if (g.type === "point") {
+        rotX = (0.12 + Math.sin(dt * 10) * 0.1) * decay;
+      }
+      if (dt >= dur) g.type = "idle";
     }
+
+    // Al arrastrarlo: vaivén tipo péndulo, como si colgara del mouse
+    if (dragging) {
+      rotZ += Math.sin(t * 3) * 0.18;
+      rotX += 0.12;
+    }
+
+    o.rotation.set(rotX, rotY, rotZ);
+    o.position.y = posY;
   });
 
   return (
@@ -167,14 +105,15 @@ export default function Assistant({ isOn, windows, containerRef }) {
   const [bubbleOpen, setBubbleOpen] = useState(true);
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState(MESSAGES[0]);
-  const [waveNonce, setWaveNonce] = useState(0);
   const [dragging, setDragging] = useState(false);
 
   const prevWindows = useRef({});
-  const wave = () => setWaveNonce((n) => n + 1);
+  const gesture = useRef({ type: "greet", t0: null });
+  const playGesture = (type) => {
+    gesture.current = { type, t0: null };
+  };
 
-  // Posición de arrastre compartida: Migu y el globo usan las mismas motion
-  // values, así el mensaje lo sigue cuando lo arrastras.
+  // Posición de arrastre compartida (el globo sigue a Migu)
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
@@ -182,7 +121,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
     if (!isOn || dismissed) return;
     const timer = setTimeout(() => {
       setVisible(true);
-      wave();
+      playGesture("greet");
     }, 3500);
     return () => clearTimeout(timer);
   }, [isOn, dismissed]);
@@ -200,7 +139,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
           setMessage(CONTEXT[k]);
           setBubbleOpen(true);
           setVisible(true);
-          wave();
+          playGesture("point");
         }
       });
     }
@@ -225,7 +164,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
 
   return (
     <div className="absolute bottom-20 right-4 z-[45] flex flex-col items-end gap-2 max-md:bottom-20 max-md:right-2">
-      {/* Globo de diálogo (usa las mismas x/y que Migu para seguirlo al arrastrar) */}
+      {/* Globo de diálogo (sigue a Migu con las mismas x/y) */}
       <AnimatePresence>
         {bubbleOpen && (
           <motion.div
@@ -261,7 +200,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
         )}
       </AnimatePresence>
 
-      {/* Personaje 3D (arrastrable: al sostenerlo hace el "hanging idle") */}
+      {/* Personaje 3D (arrastrable) */}
       <motion.div
         drag
         dragConstraints={containerRef}
@@ -273,7 +212,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
         initial={{ opacity: 0, scale: 0.6 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 16 }}
-        onClick={() => (bubbleOpen ? wave() : setBubbleOpen(true))}
+        onClick={() => (bubbleOpen ? playGesture("greet") : setBubbleOpen(true))}
         className={`w-48 h-48 max-md:w-36 max-md:h-36 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] ${
           dragging ? "cursor-grabbing" : "cursor-grab"
         }`}
@@ -285,10 +224,10 @@ export default function Assistant({ isOn, windows, containerRef }) {
           gl={{ alpha: true }}
         >
           <Suspense fallback={null}>
-            <ambientLight intensity={0.7} />
-            <directionalLight position={[3, 4, 5]} intensity={1.5} />
+            <ambientLight intensity={0.8} />
+            <directionalLight position={[3, 4, 5]} intensity={1.6} />
             <pointLight position={[-3, -2, 2]} intensity={0.7} color="#22d3ee" />
-            <MiguModel waveNonce={waveNonce} dragging={dragging} />
+            <MiguModel gestureRef={gesture} dragging={dragging} />
           </Suspense>
         </Canvas>
       </motion.div>
