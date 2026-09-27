@@ -105,11 +105,14 @@ function PcFrame() {
           <div className="h-[35%] w-[35%] bg-cyan-200/70 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
 
-        {/* Pantalla recesada dentro del bisel */}
+        {/* Pantalla recesada dentro del bisel. El relieve (sombras internas) es
+            estático; encendida añade un brillo suave y FIJO (sin parpadeo). */}
         <div
-          className={`absolute inset-[30px] top-[38px] rounded-lg overflow-hidden shadow-[inset_0_0_0_2px_rgba(0,0,0,0.9),inset_0_4px_14px_rgba(0,0,0,0.85),0_0_2px_rgba(255,255,255,0.2)] transition-all duration-1000 ${
-            isOn ? "bg-none animate-tv-flicker" : "bg-black"
-          }`}
+          className={
+            isOn
+              ? "absolute inset-[30px] top-[38px] rounded-lg overflow-hidden transition-all duration-1000 shadow-[inset_0_0_0_2px_rgba(0,0,0,0.9),inset_0_4px_14px_rgba(0,0,0,0.85),0_0_45px_2px_rgba(170,205,255,0.22)]"
+              : "absolute inset-[30px] top-[38px] rounded-lg overflow-hidden transition-all duration-1000 bg-black shadow-[inset_0_0_0_2px_rgba(0,0,0,0.9),inset_0_4px_14px_rgba(0,0,0,0.85)]"
+          }
         >
           {screen}
         </div>
