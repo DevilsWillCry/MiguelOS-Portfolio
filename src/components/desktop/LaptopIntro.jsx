@@ -1,38 +1,78 @@
 import React, { Suspense, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars, Float } from "@react-three/drei";
+import { Stars } from "@react-three/drei";
+import * as THREE from "three";
 
 const OPEN_ANGLE = -1.95; // rad (~112°, portátil abierto)
-const OPEN_DURATION = 2.2; // s que tarda en abrirse
+const OPEN_DURATION = 2.2; // s en abrirse
+const HOLD = 0.35; // s de pausa con el portátil abierto
+const ZOOM_DURATION = 1.4; // s del acercamiento a la pantalla
 
 // easeInOutCubic
-const ease = (t) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-function LaptopModel({ onOpened }) {
+function LaptopModel({ onZoomHalfway, onFinished }) {
   const group = useRef();
   const hinge = useRef();
+  const screen = useRef();
   const screenMat = useRef();
-  const startTime = useRef(null);
-  const doneRef = useRef(false);
+
+  const phase = useRef("opening"); // opening -> zooming -> done
+  const openStart = useRef(null);
+  const zoomStart = useRef(null);
+  const camFrom = useRef(new THREE.Vector3());
+  const halfDone = useRef(false);
+
+  const screenWorld = useRef(new THREE.Vector3());
+  const screenNormal = useRef(new THREE.Vector3());
 
   useFrame((state) => {
-    if (startTime.current === null) startTime.current = state.clock.elapsedTime;
-    const elapsed = state.clock.elapsedTime - startTime.current;
-    const t = Math.min(elapsed / OPEN_DURATION, 1);
-    const e = ease(t);
+    const now = state.clock.elapsedTime;
 
-    if (hinge.current) hinge.current.rotation.x = OPEN_ANGLE * e;
-    // La pantalla se enciende conforme se abre
-    if (screenMat.current) screenMat.current.emissiveIntensity = 0.2 + e * 1.1;
-    // Leve balanceo del conjunto
-    if (group.current)
-      group.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.25;
+    if (phase.current === "opening") {
+      if (openStart.current === null) openStart.current = now;
+      const t = Math.min((now - openStart.current) / OPEN_DURATION, 1);
+      const e = ease(t);
+      if (hinge.current) hinge.current.rotation.x = OPEN_ANGLE * e;
+      if (screenMat.current) screenMat.current.emissiveIntensity = 0.2 + e * 1.0;
+      if (group.current) group.current.rotation.y = Math.sin(now * 0.4) * 0.22;
 
-    if (t >= 1 && !doneRef.current) {
-      doneRef.current = true;
-      onOpened();
+      if (t >= 1 && now - openStart.current >= OPEN_DURATION + HOLD) {
+        phase.current = "zooming";
+        zoomStart.current = now;
+        camFrom.current.copy(state.camera.position);
+      }
+      return;
+    }
+
+    if (phase.current === "zooming") {
+      const z = Math.min((now - zoomStart.current) / ZOOM_DURATION, 1);
+      const e = ease(z);
+
+      // Posición y normal reales de la pantalla en el mundo (rastreadas en vivo)
+      screen.current.getWorldPosition(screenWorld.current);
+      screen.current.getWorldDirection(screenNormal.current);
+
+      // Punto objetivo: justo frente a la pantalla, siguiendo su normal
+      const target = screenWorld.current
+        .clone()
+        .addScaledVector(screenNormal.current, 0.45);
+
+      state.camera.position.lerpVectors(camFrom.current, target, e);
+      state.camera.lookAt(screenWorld.current);
+
+      // La pantalla se enciende cada vez más fuerte (efecto de "entrar")
+      if (screenMat.current) screenMat.current.emissiveIntensity = 1.2 + e * 4.0;
+
+      if (!halfDone.current && z >= 0.75) {
+        halfDone.current = true;
+        onZoomHalfway();
+      }
+      if (z >= 1) {
+        phase.current = "done";
+        onFinished();
+      }
     }
   });
 
@@ -60,13 +100,14 @@ function LaptopModel({ onOpened }) {
           <meshStandardMaterial color="#1f2937" metalness={0.7} roughness={0.35} />
         </mesh>
         {/* Pantalla (cara interna) */}
-        <mesh position={[0, 0.07, 1.05]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh ref={screen} position={[0, 0.07, 1.05]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[2.9, 1.8]} />
           <meshStandardMaterial
             ref={screenMat}
             color="#0b1020"
             emissive="#ef4444"
             emissiveIntensity={0.2}
+            toneMapped={false}
           />
         </mesh>
       </group>
@@ -77,18 +118,16 @@ function LaptopModel({ onOpened }) {
 export default function LaptopIntro({ onFinished }) {
   const [fading, setFading] = useState(false);
 
-  const handleOpened = () => {
-    // Pausa breve con el portátil abierto, luego funde a negro y pasa al 2D
-    setTimeout(() => setFading(true), 400);
-    setTimeout(() => onFinished(), 1100);
-  };
+  // Al acercarse casi del todo a la pantalla, funde a negro para empatar con el 2D
+  const handleZoomHalfway = () => setFading(true);
+  const handleFinished = () => onFinished();
 
   return (
     <motion.div
       className="fixed inset-0 z-[200] bg-black"
       initial={{ opacity: 1 }}
       animate={{ opacity: fading ? 0 : 1 }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.5 }}
     >
       <Canvas camera={{ position: [0, 1.1, 6], fov: 45 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
@@ -97,17 +136,18 @@ export default function LaptopIntro({ onFinished }) {
           <directionalLight position={[4, 6, 4]} intensity={1.3} />
           <pointLight position={[-4, -2, -4]} intensity={0.7} color="#ef4444" />
           <Stars radius={60} depth={30} count={1500} factor={4} fade speed={1} />
-          <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.4}>
-            <LaptopModel onOpened={handleOpened} />
-          </Float>
+          <LaptopModel
+            onZoomHalfway={handleZoomHalfway}
+            onFinished={handleFinished}
+          />
         </Suspense>
       </Canvas>
 
       <motion.span
         className="absolute bottom-10 left-1/2 -translate-x-1/2 text-sm text-white/70 font-mono tracking-widest"
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 1, 0.4, 1] }}
-        transition={{ duration: 2.5, repeat: Infinity }}
+        animate={{ opacity: fading ? 0 : [0, 1, 1, 0.4, 1] }}
+        transition={{ duration: 2.5, repeat: fading ? 0 : Infinity }}
       >
         Iniciando Miguel<span className="text-red-600 font-bold">OS</span>...
       </motion.span>
