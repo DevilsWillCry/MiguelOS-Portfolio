@@ -1,13 +1,14 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF, Center } from "@react-three/drei";
+import { useGLTF, useAnimations, Center } from "@react-three/drei";
+import * as THREE from "three";
 import { FaTimes, FaArrowRight } from "react-icons/fa";
 
 const MODEL_URL = "/modelo/migu.glb";
 const MODEL_SCALE = 1.6;
+const DANCE_MAX = 2.8; // s máx que dura el baile antes de volver a idle
 
-// Consejos generales (se ciclan con "Siguiente")
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
   "Haz doble clic en los iconos del escritorio para abrir las apps.",
@@ -17,7 +18,6 @@ const MESSAGES = [
   "¿Listo para explorar? Disfruta el recorrido.",
 ];
 
-// Mensajes contextuales al abrir cada app
 const CONTEXT = {
   about: "Ese es mi 'Sobre mí' en formato JSON. ¡Conóceme!",
   projects: "Aquí están mis proyectos. Abre una carpeta para ver los detalles.",
@@ -25,52 +25,52 @@ const CONTEXT = {
   model3d: "¡El Visor 3D! Arrastra para rotar el modelo y usa la rueda para zoom.",
 };
 
-// Modelo 3D de Migu con animación idle + gestos por transformación del cuerpo
-// (el GLB no tiene huesos, así que los gestos mueven el modelo completo).
-function MiguModel({ gestureRef }) {
-  const ref = useRef();
-  const { scene } = useGLTF(MODEL_URL);
-  const model = useMemo(() => scene.clone(true), [scene]);
+// Modelo riggeado de Migu: animación esquelética real (idle "Alert" en bucle,
+// y "Dance" como celebración que se dispara con danceNonce).
+function MiguModel({ danceNonce }) {
+  const group = useRef();
+  const { scene, animations } = useGLTF(MODEL_URL);
+  const { actions } = useAnimations(animations, group);
 
+  // Idle en bucle
+  useEffect(() => {
+    const idle = actions?.Alert;
+    if (!idle) return;
+    idle.reset().fadeIn(0.4).play();
+    return () => idle.fadeOut(0.3);
+  }, [actions]);
+
+  // Baile al recibir un trigger, con retorno automático a idle
+  useEffect(() => {
+    if (danceNonce === 0) return;
+    const dance = actions?.Dance;
+    const idle = actions?.Alert;
+    if (!dance) return;
+
+    dance.reset();
+    dance.setLoop(THREE.LoopRepeat);
+    idle?.fadeOut(0.2);
+    dance.fadeIn(0.2).play();
+
+    const dur = Math.min(dance.getClip().duration, DANCE_MAX);
+    const timer = setTimeout(() => {
+      dance.fadeOut(0.4);
+      idle?.reset().fadeIn(0.4).play();
+    }, dur * 1000);
+    return () => clearTimeout(timer);
+  }, [danceNonce, actions]);
+
+  // Flotación sutil (además de la animación esquelética)
   useFrame((state) => {
-    const o = ref.current;
-    if (!o) return;
-    const t = state.clock.elapsedTime;
-
-    // Idle base
-    let rotX = 0;
-    let rotY = Math.sin(t * 0.8) * 0.3; // mira de lado a lado
-    let rotZ = 0;
-    let posY = Math.sin(t * 1.6) * 0.05; // flota
-
-    // Gesto activo
-    const g = gestureRef.current;
-    if (g && g.type !== "idle") {
-      if (g.t0 == null) g.t0 = t;
-      const dt = t - g.t0;
-      const dur = 1.2;
-      const decay = Math.max(0, 1 - dt / dur);
-
-      if (g.type === "greet") {
-        rotZ = Math.sin(dt * 14) * 0.22 * decay; // se mece contento
-        posY += Math.abs(Math.sin(dt * 7)) * 0.16 * decay; // saltitos
-      } else if (g.type === "point") {
-        rotX = (0.14 + Math.sin(dt * 10) * 0.12) * decay; // se inclina "¡mira!"
-      } else if (g.type === "nod") {
-        rotX = Math.sin(dt * 12) * 0.16 * decay; // asiente
-      }
-
-      if (dt >= dur) g.type = "idle";
+    if (group.current) {
+      group.current.position.y = Math.sin(state.clock.elapsedTime * 1.6) * 0.04;
     }
-
-    o.rotation.set(rotX, rotY, rotZ);
-    o.position.y = posY;
   });
 
   return (
-    <group ref={ref}>
+    <group ref={group}>
       <Center>
-        <primitive object={model} scale={MODEL_SCALE} />
+        <primitive object={scene} scale={MODEL_SCALE} />
       </Center>
     </group>
   );
@@ -84,30 +84,26 @@ export default function Assistant({ isOn, windows }) {
   const [bubbleOpen, setBubbleOpen] = useState(true);
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState(MESSAGES[0]);
+  const [danceNonce, setDanceNonce] = useState(0);
 
-  const gesture = useRef({ type: "greet", t0: null });
   const prevWindows = useRef({});
+  const dance = () => setDanceNonce((n) => n + 1);
 
-  const playGesture = (type) => {
-    gesture.current = { type, t0: null };
-  };
-
-  // Aparece un rato después de encender, saludando
+  // Aparece un rato después de encender, bailando un saludo
   useEffect(() => {
     if (!isOn || dismissed) return;
     const timer = setTimeout(() => {
       setVisible(true);
-      playGesture("greet");
+      dance();
     }, 3500);
     return () => clearTimeout(timer);
   }, [isOn, dismissed]);
 
-  // Se oculta si se apaga el PC
   useEffect(() => {
     if (!isOn) setVisible(false);
   }, [isOn]);
 
-  // Mensajes contextuales al abrir una app
+  // Mensajes contextuales + baile al abrir una app
   useEffect(() => {
     if (!windows) return;
     if (!dismissed) {
@@ -117,7 +113,7 @@ export default function Assistant({ isOn, windows }) {
           setMessage(CONTEXT[k]);
           setBubbleOpen(true);
           setVisible(true);
-          playGesture("point");
+          dance();
         }
       });
     }
@@ -131,7 +127,6 @@ export default function Assistant({ isOn, windows }) {
     setIndex(n);
     setMessage(MESSAGES[n]);
     setBubbleOpen(true);
-    playGesture("nod");
   };
 
   const close = () => {
@@ -173,7 +168,6 @@ export default function Assistant({ isOn, windows }) {
                 <FaArrowRight className="text-[9px] group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
-            {/* Cola del globo */}
             <div className="absolute -bottom-1.5 right-6 w-3 h-3 rotate-45 bg-gray-900/95 border-r border-b border-white/10" />
           </motion.div>
         )}
@@ -184,7 +178,7 @@ export default function Assistant({ isOn, windows }) {
         initial={{ opacity: 0, y: 30, scale: 0.6 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 16 }}
-        onClick={() => (bubbleOpen ? nextTip() : setBubbleOpen(true))}
+        onClick={() => (bubbleOpen ? dance() : setBubbleOpen(true))}
         className="w-36 h-36 max-md:w-28 max-md:h-28 cursor-pointer drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
         title="Migu, tu asistente"
       >
@@ -197,7 +191,7 @@ export default function Assistant({ isOn, windows }) {
             <ambientLight intensity={0.7} />
             <directionalLight position={[3, 4, 5]} intensity={1.5} />
             <pointLight position={[-3, -2, 2]} intensity={0.7} color="#22d3ee" />
-            <MiguModel gestureRef={gesture} />
+            <MiguModel danceNonce={danceNonce} />
           </Suspense>
         </Canvas>
       </motion.div>
