@@ -8,6 +8,15 @@ import { FaTimes, FaArrowRight } from "react-icons/fa";
 const MODEL_URL = "/modelo/migu.glb";
 const MODEL_SCALE = 1.5;
 
+// Idles que se ejecutan al azar (Hanging se reserva para el arrastre)
+const IDLE_POOL = [
+  "Idle_Neutral",
+  "Idle_Drunk",
+  "Idle_Dwarf",
+  "Idle_Offensive",
+  "Idle_Warrior",
+];
+
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
   "Haz doble clic en los iconos del escritorio para abrir las apps.",
@@ -32,43 +41,68 @@ const CONTEXT = {
 function MiguModel({ waveNonce, dragging }) {
   const group = useRef();
   const { scene, animations } = useGLTF(MODEL_URL);
-  const { actions } = useAnimations(animations, group);
+  const { actions, mixer } = useAnimations(animations, group);
   const currentRef = useRef(null);
+  const draggingRef = useRef(dragging);
+  draggingRef.current = dragging;
 
-  // Acción base según si se está arrastrando
-  useEffect(() => {
-    if (!actions) return;
-    const next = actions[dragging ? "Hang" : "Idle"];
+  // Reproduce una acción con crossfade desde la actual
+  const fadeTo = (name, { loop = THREE.LoopOnce, reps = 1, timeScale = 1 } = {}) => {
+    const next = actions?.[name];
     if (!next) return;
     const prev = currentRef.current;
-    if (prev && prev !== next) prev.fadeOut(0.3);
-    next.reset().fadeIn(0.3).play();
+    if (prev && prev !== next) prev.fadeOut(0.35);
+    next.reset();
+    next.setLoop(loop, reps);
+    next.clampWhenFinished = false;
+    next.timeScale = timeScale;
+    next.fadeIn(0.35).play();
     currentRef.current = next;
-  }, [actions, dragging]);
+  };
+
+  // Elige un idle al azar (distinto del actual) y lo reproduce una vez
+  const playRandomIdle = () => {
+    const pool = IDLE_POOL.filter((n) => actions?.[n]);
+    if (pool.length === 0) return;
+    const prevName = currentRef.current?.getClip().name;
+    const choices = pool.length > 1 ? pool.filter((n) => n !== prevName) : pool;
+    const name = choices[Math.floor(Math.random() * choices.length)];
+    fadeTo(name, { loop: THREE.LoopOnce });
+  };
+
+  // Arranque
+  useEffect(() => {
+    if (actions) playRandomIdle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actions]);
+
+  // Arrastre: Hanging en bucle / al soltar, vuelve a idles aleatorios
+  useEffect(() => {
+    if (!actions) return;
+    if (dragging) fadeTo("Hang", { loop: THREE.LoopRepeat });
+    else playRandomIdle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragging, actions]);
 
   // Saludo transitorio (no interrumpe si está siendo arrastrado)
   useEffect(() => {
-    if (waveNonce === 0 || dragging) return;
-    const wave = actions?.Wave;
-    if (!wave) return;
-    const base = currentRef.current;
-
-    wave.reset();
-    wave.setLoop(THREE.LoopRepeat, 3); // el clip es corto: se repite
-    wave.timeScale = 0.9;
-    base?.fadeOut(0.2);
-    wave.fadeIn(0.2).play();
-
-    const ms = Math.min((wave.getClip().duration / 0.9) * 3 * 1000, 2500);
-    const timer = setTimeout(() => {
-      wave.fadeOut(0.3);
-      const b = actions[dragging ? "Hang" : "Idle"];
-      b?.reset().fadeIn(0.3).play();
-      currentRef.current = b;
-    }, ms);
-    return () => clearTimeout(timer);
+    if (waveNonce === 0 || draggingRef.current) return;
+    fadeTo("Wave", { loop: THREE.LoopRepeat, reps: 3, timeScale: 0.9 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waveNonce]);
+
+  // Al terminar una acción (idle o saludo), encadena otro idle aleatorio
+  useEffect(() => {
+    if (!mixer) return;
+    const onFinished = (e) => {
+      if (draggingRef.current) return; // Hang va en bucle, no termina
+      if (e.action !== currentRef.current) return; // ignora la saliente
+      playRandomIdle();
+    };
+    mixer.addEventListener("finished", onFinished);
+    return () => mixer.removeEventListener("finished", onFinished);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mixer]);
 
   // Flotación sutil
   useFrame((state) => {
