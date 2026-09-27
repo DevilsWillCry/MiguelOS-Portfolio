@@ -1,8 +1,11 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float } from "@react-three/drei";
+import { useGLTF, Center } from "@react-three/drei";
+import * as THREE from "three";
 import { FaTimes, FaArrowRight } from "react-icons/fa";
+
+const MODEL_URL = "/modelo/migu.glb";
 
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
@@ -13,76 +16,44 @@ const MESSAGES = [
   "¿Listo para explorar? Disfruta el recorrido.",
 ];
 
-// Robotcito flotante: cuerpo, cara con ojos brillantes y antena.
-function Bot() {
-  const group = useRef();
-  const blink = useRef(1);
+// Modelo 3D de Migu. Como el GLB viene sin material/textura, le asignamos uno
+// rojo de marca por código. Animación idle: flota y se balancea suavemente.
+function MiguModel() {
+  const ref = useRef();
+  const { scene } = useGLTF(MODEL_URL);
+
+  const model = useMemo(() => {
+    const clone = scene.clone(true);
+    clone.traverse((o) => {
+      if (o.isMesh) {
+        o.material = new THREE.MeshStandardMaterial({
+          color: "#e11d48",
+          metalness: 0.25,
+          roughness: 0.45,
+        });
+      }
+    });
+    return clone;
+  }, [scene]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    if (group.current) {
-      // Mira suavemente de lado a lado
-      group.current.rotation.y = Math.sin(t * 0.9) * 0.35;
-      group.current.rotation.x = Math.sin(t * 0.6) * 0.08;
+    if (ref.current) {
+      ref.current.rotation.y = Math.sin(t * 0.8) * 0.35; // mira de lado a lado
+      ref.current.position.y = Math.sin(t * 1.6) * 0.06; // flota
     }
-    // Parpadeo ocasional
-    const phase = t % 4;
-    blink.current = phase > 3.85 ? 0.1 : 1;
   });
 
   return (
-    <Float speed={2.2} floatIntensity={0.7} rotationIntensity={0.15}>
-      <group ref={group}>
-        {/* Cuerpo */}
-        <mesh>
-          <sphereGeometry args={[1, 48, 48]} />
-          <meshStandardMaterial color="#e11d48" metalness={0.45} roughness={0.28} />
-        </mesh>
-
-        {/* Visor / cara oscura */}
-        <mesh position={[0, 0.05, 0.72]}>
-          <sphereGeometry args={[0.62, 32, 32]} />
-          <meshStandardMaterial color="#0b1020" metalness={0.3} roughness={0.4} />
-        </mesh>
-
-        {/* Ojos */}
-        <mesh position={[-0.24, 0.12, 1.12]} scale={[1, blink.current, 1]}>
-          <sphereGeometry args={[0.12, 24, 24]} />
-          <meshStandardMaterial
-            color="#67e8f9"
-            emissive="#22d3ee"
-            emissiveIntensity={2}
-            toneMapped={false}
-          />
-        </mesh>
-        <mesh position={[0.24, 0.12, 1.12]} scale={[1, blink.current, 1]}>
-          <sphereGeometry args={[0.12, 24, 24]} />
-          <meshStandardMaterial
-            color="#67e8f9"
-            emissive="#22d3ee"
-            emissiveIntensity={2}
-            toneMapped={false}
-          />
-        </mesh>
-
-        {/* Antena */}
-        <mesh position={[0, 1.05, 0]}>
-          <cylinderGeometry args={[0.03, 0.03, 0.4, 12]} />
-          <meshStandardMaterial color="#9ca3af" metalness={0.8} roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 1.3, 0]}>
-          <sphereGeometry args={[0.1, 20, 20]} />
-          <meshStandardMaterial
-            color="#fca5a5"
-            emissive="#ef4444"
-            emissiveIntensity={2.2}
-            toneMapped={false}
-          />
-        </mesh>
-      </group>
-    </Float>
+    <group ref={ref}>
+      <Center>
+        <primitive object={model} scale={1.4} />
+      </Center>
+    </group>
   );
 }
+
+useGLTF.preload(MODEL_URL);
 
 export default function Assistant({ isOn }) {
   const [visible, setVisible] = useState(false);
@@ -165,10 +136,10 @@ export default function Assistant({ isOn }) {
       >
         <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} dpr={[1, 2]} gl={{ alpha: true }}>
           <Suspense fallback={null}>
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[3, 4, 5]} intensity={1.4} />
-            <pointLight position={[-3, -2, 2]} intensity={0.6} color="#22d3ee" />
-            <Bot />
+            <ambientLight intensity={0.7} />
+            <directionalLight position={[3, 4, 5]} intensity={1.5} />
+            <pointLight position={[-3, -2, 2]} intensity={0.7} color="#22d3ee" />
+            <MiguModel />
           </Suspense>
         </Canvas>
       </motion.div>
