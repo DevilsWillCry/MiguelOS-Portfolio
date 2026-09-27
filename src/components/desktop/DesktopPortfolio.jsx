@@ -14,6 +14,7 @@ import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background.jpg";
 import HomeDetail from "../taskbar/HomeDetail";
 import MobileNavBar from "../taskbar/MobileNavBar";
+import Assistant from "./Assistant";
 
 const desktopIcons = [
   { id: "about",    icon: jsonIcon,         label: "Sobre_mí.json" },
@@ -296,6 +297,9 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
         containerRef={screenRef}
         isMobile={isMobile}
       />
+
+      {/* Asistente estilo Office Assistant */}
+      <Assistant isOn={isOn} />
 
       {/* Barra de tareas - Windows 11 Modern Style (solo escritorio) */}
       {!isMobile && (
