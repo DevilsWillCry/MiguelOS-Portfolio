@@ -1,12 +1,12 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { FaTimes, FaArrowRight } from "react-icons/fa";
 
 const MODEL_URL = "/modelo/migu.glb";
-const MODEL_SCALE = 1.6;
+const MODEL_SCALE = 1.5;
 
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
@@ -100,6 +100,11 @@ export default function Assistant({ isOn, windows, containerRef }) {
   const prevWindows = useRef({});
   const wave = () => setWaveNonce((n) => n + 1);
 
+  // Posición de arrastre compartida: Migu y el globo usan las mismas motion
+  // values, así el mensaje lo sigue cuando lo arrastras.
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
   useEffect(() => {
     if (!isOn || dismissed) return;
     const timer = setTimeout(() => {
@@ -147,13 +152,14 @@ export default function Assistant({ isOn, windows, containerRef }) {
 
   return (
     <div className="absolute bottom-20 right-4 z-[45] flex flex-col items-end gap-2 max-md:bottom-20 max-md:right-2">
-      {/* Globo de diálogo */}
+      {/* Globo de diálogo (usa las mismas x/y que Migu para seguirlo al arrastrar) */}
       <AnimatePresence>
-        {bubbleOpen && !dragging && (
+        {bubbleOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.9 }}
+            style={{ x, y }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="relative w-60 max-w-[72vw] rounded-2xl rounded-br-sm border border-white/10 bg-gradient-to-b from-gray-800/95 to-gray-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 p-3 text-white"
           >
@@ -188,22 +194,20 @@ export default function Assistant({ isOn, windows, containerRef }) {
         dragConstraints={containerRef}
         dragMomentum={false}
         dragElastic={0.15}
-        onDragStart={() => {
-          setDragging(true);
-          setBubbleOpen(false);
-        }}
+        style={{ x, y }}
+        onDragStart={() => setDragging(true)}
         onDragEnd={() => setDragging(false)}
-        initial={{ opacity: 0, y: 30, scale: 0.6 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.6 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 16 }}
         onClick={() => (bubbleOpen ? wave() : setBubbleOpen(true))}
-        className={`w-36 h-36 max-md:w-28 max-md:h-28 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] ${
+        className={`w-48 h-48 max-md:w-36 max-md:h-36 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] ${
           dragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         title="Migu — arrástrame o haz clic"
       >
         <Canvas
-          camera={{ position: [0, 0, 4.0], fov: 45 }}
+          camera={{ position: [0, 0.2, 5.2], fov: 45 }}
           dpr={[1, 2]}
           gl={{ alpha: true }}
         >
