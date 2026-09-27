@@ -5,6 +5,7 @@ import StartUpPcFrame from "./StartUpPcFrame";
 import ShutDownPcFrame from "./ShutDownPcFrame";
 import PhoneFrame from "./PhoneFrame";
 import LaptopIntro from "./LaptopIntro";
+import PhoneIntro from "./PhoneIntro";
 import useDeviceType from "../../hooks/useDeviceType";
 import startUpWindowsSound from "../../assets/Windows_Startup_Sound.wav";
 
@@ -97,9 +98,15 @@ function PcFrame() {
     </>
   );
 
-  // Modo móvil/tablet: marco de teléfono a pantalla completa
+  // Modo móvil/tablet: marco de teléfono a pantalla completa.
+  // El PhoneFrame se monta detrás y la intro 3D (teléfono) se desvanece encima.
   if (isMobile) {
-    return <PhoneFrame isOn={isOn}>{screen}</PhoneFrame>;
+    return (
+      <>
+        <PhoneFrame isOn={isOn}>{screen}</PhoneFrame>
+        {!introDone && <PhoneIntro onFinished={() => setIntroDone(true)} />}
+      </>
+    );
   }
 
   // Modo escritorio: marco de monitor
