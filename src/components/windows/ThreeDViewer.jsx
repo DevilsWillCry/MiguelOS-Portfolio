@@ -143,7 +143,7 @@ export default function ThreeDViewer({
               camera={{ position: [0, 0, 6], fov: 45 }}
               dpr={[1, 2]}
               resize={{ debounce: 0 }}
-              style={{ width: "100%", height: "100%", display: "block" }}
+              style={{ position: "absolute", inset: 0, display: "block" }}
             >
               <Suspense fallback={null}>
                 <Scene />
