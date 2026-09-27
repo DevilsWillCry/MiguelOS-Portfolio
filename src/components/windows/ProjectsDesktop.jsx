@@ -162,12 +162,12 @@ export default function ProjectsDesktop({
             {/* Contenido de la ventana - Insert proyects were like folders*/}
             <div className="relative p-1 text-xs flex flex-row flex-wrap items-center flex-shrink-0 gap-1 scrollbar-hide h-[80%] justify-normal w-full transition-all">
               <ArrowDownUp isObserved={isObserved} />
-              <div className="w-full h-full overflow-y-auto scrollbar-hide flex flex-row flex-wrap items-center flex-shrink-0 gap-3">
+              <div className="w-full h-full overflow-y-auto scrollbar-hide flex flex-row flex-wrap items-start content-start gap-3 p-1">
                 {projects.map((project) => (
                   <span
                     key={project.id}
                     onClick={() => setActiveProject(project.id)}
-                    className={`flex flex-col gap-2 justify-center w-[45%] h-[45%] p-2 items-center cursor-pointer hover:bg-white/10 rounded text-center overflow-y-hidden scrollbar-hide ${
+                    className={`flex flex-col gap-2 justify-start w-24 h-auto p-2 items-center cursor-pointer hover:bg-white/10 rounded text-center ${
                       activeProject ? "hidden" : ""
                     }`}
                   >
