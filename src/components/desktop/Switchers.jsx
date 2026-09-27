@@ -14,7 +14,7 @@ const Switchers = ({ isOn, isOff, handleClick }) => {
         <input
           type="checkbox"
           id="switcher-1"
-          onClick={handleClick}
+          onChange={handleClick}
           checked={isOn || false}
           className={`
             peer appearance-none relative w-full h-full rounded-[25px] bg-black outline-none font-oswald
