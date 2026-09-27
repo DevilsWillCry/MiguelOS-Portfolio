@@ -26,6 +26,10 @@ function LaptopModel({ onZoomHalfway }) {
 
   const screenWorld = useRef(new THREE.Vector3());
   const screenNormal = useRef(new THREE.Vector3());
+  const lookNow = useRef(new THREE.Vector3());
+
+  // Punto que encuadra el portátil durante la apertura (la orientación parte de aquí)
+  const LOOK_FROM = new THREE.Vector3(0, 0.55, -0.6);
 
   useFrame((state) => {
     const now = state.clock.elapsedTime;
@@ -37,6 +41,9 @@ function LaptopModel({ onZoomHalfway }) {
       if (hinge.current) hinge.current.rotation.x = OPEN_ANGLE * e;
       if (screenMat.current) screenMat.current.emissiveIntensity = 0.2 + e * 1.0;
       if (group.current) group.current.rotation.y = Math.sin(now * 0.4) * 0.22;
+
+      // Orientación estable hacia el portátil para que el zoom no dé un salto
+      state.camera.lookAt(LOOK_FROM);
 
       if (t >= 1 && now - openStart.current >= OPEN_DURATION + HOLD) {
         phase.current = "zooming";
@@ -54,13 +61,18 @@ function LaptopModel({ onZoomHalfway }) {
       screen.current.getWorldPosition(screenWorld.current);
       screen.current.getWorldDirection(screenNormal.current);
 
-      // Punto objetivo: justo frente a la pantalla, siguiendo su normal
+      // Objetivo: frente a la pantalla, pero a la MISMA altura que la cámara de
+      // partida → el vuelo es horizontal, sin caer hacia abajo.
       const target = screenWorld.current
         .clone()
-        .addScaledVector(screenNormal.current, 0.45);
+        .addScaledVector(screenNormal.current, 0.5);
+      target.y = camFrom.current.y;
 
       state.camera.position.lerpVectors(camFrom.current, target, e);
-      state.camera.lookAt(screenWorld.current);
+
+      // La orientación pasa suave de encuadrar el portátil a centrar la pantalla
+      lookNow.current.copy(LOOK_FROM).lerp(screenWorld.current, e);
+      state.camera.lookAt(lookNow.current);
 
       // La pantalla se enciende cada vez más fuerte (efecto de "entrar")
       if (screenMat.current) screenMat.current.emissiveIntensity = 1.2 + e * 4.0;
