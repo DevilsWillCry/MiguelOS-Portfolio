@@ -81,7 +81,7 @@ export default function ThemeBackgroundChanger({
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.25 }}
           >
 
             {/* Barra superior */}

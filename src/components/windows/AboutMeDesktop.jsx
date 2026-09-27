@@ -78,7 +78,7 @@ export default function AboutMeDesktop({
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.25 }}
           >
             {/* Barra superior */}
             <div className="sticky top-0 w-full bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30 flex-shrink-0">

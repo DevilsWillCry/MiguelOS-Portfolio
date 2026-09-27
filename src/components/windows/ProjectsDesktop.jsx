@@ -95,7 +95,7 @@ export default function ProjectsDesktop({
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.25 }}
           >
 
             {/* Barra superior */}
@@ -234,7 +234,7 @@ export default function ProjectsDesktop({
             initial={{ opacity: 0, scale: 0.8, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 200 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.25 }}
             className={
               isMobile
                 ? "absolute top-0 left-0 w-full h-[calc(100%-3.5rem)] bg-gray-900 z-30 overflow-auto scrollbar-hide"
