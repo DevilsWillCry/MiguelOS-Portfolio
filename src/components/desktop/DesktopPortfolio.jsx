@@ -4,10 +4,12 @@ import { motion, useMotionValue, animate } from "framer-motion";
 import AboutMeDesktop from "../windows/AboutMeDesktop";
 import ProjectsDesktop from "../windows/ProjectsDesktop";
 import ThemeBackgroundChanger from "../windows/ThemeBackgroundChanger";
+import ThreeDViewer from "../windows/ThreeDViewer";
 
 import jsonIcon from "../../assets/json-icon.svg";
 import ProjectIcon from "../../assets/project_icon.png";
 import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
+import devIcon from "../../assets/dev-icon.svg";
 import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background.jpg";
 import HomeDetail from "../taskbar/HomeDetail";
@@ -17,7 +19,12 @@ const desktopIcons = [
   { id: "about",    icon: jsonIcon,         label: "Sobre_mí.json" },
   { id: "projects", icon: ProjectIcon,      label: "Proyectos"     },
   { id: "theme",    icon: ThemeChangerIcon, label: "Cambiar temas" },
+  { id: "model3d",  icon: devIcon,          label: "Visor 3D"      },
 ];
+
+// Mapas id → icono / etiqueta, para la taskbar y el menú de inicio.
+const iconById = Object.fromEntries(desktopIcons.map((a) => [a.id, a.icon]));
+const labelById = Object.fromEntries(desktopIcons.map((a) => [a.id, a.label]));
 
 // Dimensiones de cada celda del grid (deben coincidir con w-28 del icono)
 const ICON_W    = 112; // w-28 = 7rem = 112px
@@ -112,6 +119,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
     about: { show: false, minimized: false },
     projects: { show: false, minimized: false },
     theme: { show: false, minimized: false },
+    model3d: { show: false, minimized: false },
   });
 
   // Posiciones en el grid: cada icono ocupa una celda { col, row }
@@ -273,6 +281,16 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
         isMobile={isMobile}
       />
 
+      {/* Visor 3D en el escritorio */}
+      <ThreeDViewer
+        onMinimizeChange={handleWindowsMinimized}
+        onMaximizeChange={windows.model3d.show}
+        setMaximize={setWindows}
+        isOn={isOn}
+        containerRef={screenRef}
+        isMobile={isMobile}
+      />
+
       {/* Barra de tareas - Windows 11 Modern Style (solo escritorio) */}
       {!isMobile && (
       <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-b from-gray-950/90 to-gray-900/95 flex items-center justify-center px-0 max-md:hidden border-t border-gray-700/40 backdrop-blur-xl shadow-2xl z-[50]">
@@ -291,7 +309,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
             <div className="absolute inset-0 rounded-lg bg-white/0 group-hover:bg-white/10 transition-all"></div>
 
           </button>
-            <HomeDetail isOn={isOn} isMaximizedHome={isMaximizedHome} items={windows} onHomeMaximizedIcon={handleWindowsMaximized} />
+            <HomeDetail isOn={isOn} isMaximizedHome={isMaximizedHome} items={windows} onHomeMaximizedIcon={handleWindowsMaximized} icons={iconById} labels={labelById} />
 
           {/* Divisor visual */}
           <div className="h-6 w-px bg-gradient-to-b from-transparent via-gray-600/40 to-transparent mx-1"></div>
@@ -310,30 +328,16 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
 
                   {/* Contenido */}
                   <div className="relative z-10">
-                    {key === "about" ? (
-                      <img
-                        src={jsonIcon}
-                        alt="json icon"
-                        className="w-4 h-4 group-hover:brightness-110 transition-all"
-                      />
-                    ) : key === "projects" ? (
-                      <img
-                        src={ProjectIcon}
-                        alt="folder icon"
-                        className="w-4 h-4 group-hover:brightness-110 transition-all"
-                      />
-                    ) : (
-                      <img
-                        src={ThemeChangerIcon}
-                        alt="folder icon"
-                        className="w-4 h-4 group-hover:brightness-110 transition-all"
-                      />
-                    )}
+                    <img
+                      src={iconById[key]}
+                      alt={`${key} icon`}
+                      className="w-4 h-4 group-hover:brightness-110 transition-all"
+                    />
                   </div>
 
                   {/* Etiqueta */}
                   <span className="relative z-10 capitalize font-medium text-gray-100 group-hover:text-white transition-colors">
-                    {key}
+                    {labelById[key] ?? key}
                   </span>
                 </button>
               )

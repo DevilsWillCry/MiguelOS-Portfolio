@@ -1,11 +1,6 @@
 import React from "react";
 
-import jsonIcon from "../../assets/json-icon.svg";
-import ProjectIcon from "../../assets/project_icon.png";
-import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
-import windowsIcon from "../../assets/home_icon.min.svg";
-
-export default function HomeDetail({ isOn, isMaximizedHome, items, onHomeMaximizedIcon}) {
+export default function HomeDetail({ isOn, isMaximizedHome, items, onHomeMaximizedIcon, icons, labels }) {
   return (
     <>
       {isMaximizedHome && isOn && (
@@ -23,29 +18,15 @@ export default function HomeDetail({ isOn, isMaximizedHome, items, onHomeMaximiz
                   className="group relative flex-col flex items-center w-[5rem] h-[5rem] bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white text-xs px-3 py-1 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl border border-gray-700/40 hover:border-gray-600/60 overflow-hidden justify-center m-3 "
                 >
                   <div className="relative z-10">
-                    {key === "about" ? (
-                      <img
-                        src={jsonIcon}
-                        alt="json icon"
-                        className="w-[80%] h-[80%] group-hover:brightness-110 transition-all pl-2"
-                      />
-                    ) : key === "projects" ? (
-                      <img
-                        src={ProjectIcon}
-                        alt="folder icon"
-                        className="w-[80%] h-[80%] group-hover:brightness-110 transition-all pl-2"
-                      />
-                    ) : (
-                      <img
-                        src={ThemeChangerIcon}
-                        alt="folder icon"
-                        className="w-[80%] h-[80%] group-hover:brightness-110 transition-all  pl-2"
-                      />
-                    )}
+                    <img
+                      src={icons?.[key]}
+                      alt={`${key} icon`}
+                      className="w-[80%] h-[80%] group-hover:brightness-110 transition-all pl-2"
+                    />
                   </div>
                   {/* Etiqueta */}
                   <span className="relative z-10 capitalize font-medium text-gray-100 group-hover:text-white transition-colors">
-                    {key}
+                    {labels?.[key] ?? key}
                   </span>
                 </button>
               )
