@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars, Float, MeshDistortMaterial } from "@react-three/drei";
@@ -9,6 +9,7 @@ import {
   FaWindowRestore,
 } from "react-icons/fa";
 import { getWindowClass } from "../../helpers/windowClass";
+import useWindowFrame from "../../hooks/useWindowFrame";
 
 function Scene() {
   return (
@@ -65,7 +66,7 @@ export default function ThreeDViewer({
   containerRef,
   isMobile,
 }) {
-  const [isMaximized, setIsMaximized] = useState(false);
+  const { x, y, isMaximized, maximize, restore } = useWindowFrame();
 
   useEffect(() => {
     if (!isOn) {
@@ -77,7 +78,7 @@ export default function ThreeDViewer({
   }, [isOn]);
 
   const baseClass =
-    "absolute top-24 left-24 w-[50%] h-[55%] bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[45%] min-xl:h-[55%] min-xl:top-40 min-xl:left-64 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[2rem] min-lg:left-[10rem] min-lg:w-[50%] min-lg:h-[55%] flex flex-col";
+    "absolute top-24 left-24 w-[50%] h-[55%] bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[45%] min-xl:h-[55%] min-xl:top-40 min-xl:left-64 max-md:top-12 max-md:left-3 max-md:w-[80%] max-md:h-[50%] min-lg:top-[2rem] min-lg:left-[10rem] min-lg:w-[50%] min-lg:h-[55%]";
 
   return (
     <AnimatePresence>
@@ -88,14 +89,15 @@ export default function ThreeDViewer({
           dragMomentum={false}
           dragElastic={0.8}
           dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
+          style={{ x, y }}
           className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
-          initial={{ opacity: 0, scale: 0.8, y: 0 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 200 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.25 }}
         >
-          {/* Barra superior */}
-          <div className="sticky top-0 w-full bg-gray-800 px-3 py-2 rounded-t-xl flex justify-between items-center cursor-move z-30 flex-shrink-0">
+          {/* Barra superior (altura fija h-10 para anclar el lienzo debajo) */}
+          <div className="absolute top-0 left-0 right-0 h-10 bg-gray-800 px-3 rounded-t-xl flex justify-between items-center cursor-move z-30">
             <span className="text-sm">Visor 3D</span>
             <div className="flex gap-2 items-center">
               <FaMinus
@@ -112,18 +114,18 @@ export default function ThreeDViewer({
                 (isMaximized ? (
                   <FaWindowRestore
                     className="text-green-400 cursor-pointer text-sm"
-                    onClick={() => setIsMaximized(false)}
+                    onClick={restore}
                   />
                 ) : (
                   <FaWindowMaximize
                     className="text-green-400 cursor-pointer text-sm"
-                    onClick={() => setIsMaximized(true)}
+                    onClick={maximize}
                   />
                 ))}
               <FaWindowClose
                 className="text-red-500 cursor-pointer"
                 onClick={() => {
-                  setIsMaximized(false);
+                  restore();
                   setMaximize((prev) => ({
                     ...prev,
                     model3d: { show: false, minimized: false },
@@ -133,10 +135,11 @@ export default function ThreeDViewer({
             </div>
           </div>
 
-          {/* Lienzo 3D. stopPropagation evita que arrastrar la escena mueva la ventana:
-              la ventana se arrastra por la barra de título, y aquí se orbita el modelo. */}
+          {/* Lienzo 3D con límites absolutos (top-10 = debajo de la barra) para
+              tener siempre un tamaño en píxeles definido. stopPropagation evita
+              que arrastrar la escena mueva la ventana. */}
           <div
-            className="relative flex-1 min-h-0 overflow-hidden rounded-b-xl"
+            className="absolute top-10 left-0 right-0 bottom-0 overflow-hidden rounded-b-xl"
             onPointerDown={(e) => e.stopPropagation()}
           >
             <Canvas

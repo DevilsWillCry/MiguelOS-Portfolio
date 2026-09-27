@@ -13,6 +13,7 @@ import ShowInsideFolder from "../projects/ShowInsideFolder";
 import DescriptionProjectDesktop from "../projects/DescriptionProjectDesktop";
 import ArrowDownUp from "../ui/ArrowDownUp";
 import { getWindowClass } from "../../helpers/windowClass";
+import useWindowFrame from "../../hooks/useWindowFrame";
 
 export default function ProjectsDesktop({
   onMinimizeChange,
@@ -30,10 +31,10 @@ export default function ProjectsDesktop({
   const loadMoreRef = useRef(null);
 
   const [isObserved, setIsObserved] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
+  const { x, y, isMaximized, maximize, restore } = useWindowFrame();
 
   const baseClass =
-    "absolute min-xl:top-[12rem] min-xl:left-[25rem] bg-gray-900 rounded-xl shadow-xl w-[300px] h-[250px] z-20 max-md:top-32 max-md:left-10 max-md:-translate-x-1/2 max-md:w-[75%] max-md:h-[40%] min-lg:top-[1rem] min-lg:left-[22rem]";
+    "absolute min-xl:top-[12rem] min-xl:left-[25rem] bg-gray-900 rounded-xl shadow-xl w-[300px] h-[250px] z-20 max-md:top-32 max-md:left-10 max-md:w-[75%] max-md:h-[40%] min-lg:top-[1rem] min-lg:left-[22rem]";
 
   useEffect(() => {
     if (!isOn) {
@@ -91,10 +92,11 @@ export default function ProjectsDesktop({
             dragConstraints={containerRef}
             dragElastic={0.8}
             dragMomentum={false}
+            style={{ x, y }}
             className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
-            initial={{ opacity: 0, scale: 0.8, y: 0 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 200 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.25 }}
           >
 
@@ -134,18 +136,18 @@ export default function ProjectsDesktop({
                   (isMaximized ? (
                     <FaWindowRestore
                       className="text-green-400 cursor-pointer text-sm hover:text-green-700"
-                      onClick={() => setIsMaximized(false)}
+                      onClick={restore}
                     />
                   ) : (
                     <FaWindowMaximize
                       className="text-green-400 cursor-pointer text-sm hover:text-green-700"
-                      onClick={() => setIsMaximized(true)}
+                      onClick={maximize}
                     />
                   ))}
                 <FaWindowClose
                   className="text-red-500 cursor-pointer hover:text-red-800"
                   onClick={() => {
-                    setIsMaximized(false);
+                    restore();
                     setMaximize((prev) => ({
                       ...prev,
                       projects: {

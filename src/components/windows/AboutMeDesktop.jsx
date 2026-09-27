@@ -5,6 +5,7 @@ import { FaWindowClose, FaMinus, FaWindowMaximize, FaWindowRestore } from "react
 import JsonCodeBlock from "../code/JsonCodeBlock";
 import ArrowDownUp from "../ui/ArrowDownUp";
 import { getWindowClass } from "../../helpers/windowClass";
+import useWindowFrame from "../../hooks/useWindowFrame";
 
 export default function AboutMeDesktop({
   onMinimizeChange,
@@ -17,10 +18,10 @@ export default function AboutMeDesktop({
   const loadMoreRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [isObserved, setIsObserved] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
+  const { x, y, isMaximized, maximize, restore } = useWindowFrame();
 
   const baseClass =
-    "absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[60%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:-translate-x-1/2 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] flex flex-col";
+    "absolute bg-gray-900 rounded-xl shadow-xl z-10 min-xl:w-[50%] min-xl:h-[60%] min-xl:top-32 min-xl:left-40 max-md:top-12 max-md:left-3 max-md:w-[80%] max-md:h-[50%] min-lg:top-[1rem] min-lg:left-[7rem] min-lg:w-[50%] min-lg:h-[60%] flex flex-col";
 
   useEffect(() => {
     if (!isOn) {
@@ -74,10 +75,11 @@ export default function AboutMeDesktop({
             dragMomentum={false}
             dragElastic={0.8}
             dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
+            style={{ x, y }}
             className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
-            initial={{ opacity: 0, scale: 0.8, y: 0 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 200 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.25 }}
           >
             {/* Barra superior */}
@@ -101,18 +103,18 @@ export default function AboutMeDesktop({
                   (isMaximized ? (
                     <FaWindowRestore
                       className="text-green-400 cursor-pointer text-sm"
-                      onClick={() => setIsMaximized(false)}
+                      onClick={restore}
                     />
                   ) : (
                     <FaWindowMaximize
                       className="text-green-400 cursor-pointer text-sm"
-                      onClick={() => setIsMaximized(true)}
+                      onClick={maximize}
                     />
                   ))}
                 <FaWindowClose
                   className="text-red-500 cursor-pointer"
                   onClick={() => {
-                    setIsMaximized(false);
+                    restore();
                     setMaximize((prev) => ({
                       ...prev,
                       about: {
