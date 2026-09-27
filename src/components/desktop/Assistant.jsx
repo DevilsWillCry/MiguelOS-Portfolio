@@ -46,57 +46,72 @@ function MiguModel({ waveNonce, dragging }) {
   const draggingRef = useRef(dragging);
   draggingRef.current = dragging;
 
-  // Reproduce una acción con crossfade desde la actual
-  const fadeTo = (name, { loop = THREE.LoopOnce, reps = 1, timeScale = 1 } = {}) => {
+  const idleTimer = useRef(null);
+
+  // Reproduce una acción con crossfade suave desde la actual
+  const fadeTo = (name, { loop = THREE.LoopRepeat, reps = Infinity, timeScale = 1, fade = 0.5 } = {}) => {
     const next = actions?.[name];
-    if (!next) return;
+    if (!next) return null;
     const prev = currentRef.current;
-    if (prev && prev !== next) prev.fadeOut(0.35);
     next.reset();
     next.setLoop(loop, reps);
     next.clampWhenFinished = false;
     next.timeScale = timeScale;
-    next.fadeIn(0.35).play();
+    next.setEffectiveWeight(1);
+    next.fadeIn(fade).play();
+    if (prev && prev !== next) prev.fadeOut(fade);
     currentRef.current = next;
+    return next;
   };
 
-  // Elige un idle al azar (distinto del actual) y lo reproduce una vez
+  // Idle aleatorio EN BUCLE; se reprograma el cambio tras ~una vuelta
   const playRandomIdle = () => {
+    clearTimeout(idleTimer.current);
     const pool = IDLE_POOL.filter((n) => actions?.[n]);
     if (pool.length === 0) return;
     const prevName = currentRef.current?.getClip().name;
     const choices = pool.length > 1 ? pool.filter((n) => n !== prevName) : pool;
     const name = choices[Math.floor(Math.random() * choices.length)];
-    fadeTo(name, { loop: THREE.LoopOnce });
+    const act = fadeTo(name, { loop: THREE.LoopRepeat });
+    const dur = act?.getClip().duration || 7;
+    idleTimer.current = setTimeout(() => {
+      if (!draggingRef.current) playRandomIdle();
+    }, Math.max(4, dur) * 1000);
   };
 
   // Arranque
   useEffect(() => {
     if (actions) playRandomIdle();
+    return () => clearTimeout(idleTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actions]);
 
   // Arrastre: Hanging en bucle / al soltar, vuelve a idles aleatorios
   useEffect(() => {
     if (!actions) return;
-    if (dragging) fadeTo("Hang", { loop: THREE.LoopRepeat });
-    else playRandomIdle();
+    if (dragging) {
+      clearTimeout(idleTimer.current);
+      fadeTo("Hang", { loop: THREE.LoopRepeat });
+    } else {
+      playRandomIdle();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragging, actions]);
 
   // Saludo transitorio (no interrumpe si está siendo arrastrado)
   useEffect(() => {
     if (waveNonce === 0 || draggingRef.current) return;
-    fadeTo("Wave", { loop: THREE.LoopRepeat, reps: 3, timeScale: 0.9 });
+    clearTimeout(idleTimer.current);
+    fadeTo("Wave", { loop: THREE.LoopRepeat, reps: 3, timeScale: 0.9, fade: 0.25 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waveNonce]);
 
-  // Al terminar una acción (idle o saludo), encadena otro idle aleatorio
+  // El saludo (reps finitas) termina → volver a un idle aleatorio
   useEffect(() => {
     if (!mixer) return;
     const onFinished = (e) => {
-      if (draggingRef.current) return; // Hang va en bucle, no termina
-      if (e.action !== currentRef.current) return; // ignora la saliente
+      if (draggingRef.current) return;
+      if (e.action !== currentRef.current) return;
       playRandomIdle();
     };
     mixer.addEventListener("finished", onFinished);
