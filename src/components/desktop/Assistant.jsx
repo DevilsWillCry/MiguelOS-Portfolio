@@ -8,6 +8,17 @@ import { FaTimes, FaArrowRight } from "react-icons/fa";
 const MODEL_URL = "/modelo/migu.glb";
 const TARGET_HEIGHT = 2.6; // alto deseado en el encuadre (auto-ajuste de escala)
 
+// Saludo hecho a mano sobre ESTE rig (rotaciones locales sumadas a la pose bind).
+// Si el brazo queda al revés/raro, ajusta signos y valores aquí.
+const WAVE = {
+  duration: 2.2,
+  arm: { x: 0, y: 0, z: -2.1 }, // levanta el brazo hacia arriba/afuera
+  fore: { x: 0, y: 0, z: -0.5 }, // dobla el codo
+  hand: { x: 0, y: 0, z: 0.2 },
+  oscAmp: 0.5, // amplitud del "agite" de la mano
+  oscSpeed: 12,
+};
+
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
   "Haz doble clic en los iconos del escritorio para abrir las apps.",
@@ -51,32 +62,78 @@ function MiguModel({ gestureRef, dragging }) {
     return size.y > 0 ? TARGET_HEIGHT / size.y : 1;
   }, [scene]);
 
+  // Huesos del brazo derecho + su rotación de bind (pose natural)
+  const arm = useMemo(() => {
+    const get = (n) => scene.getObjectByName(n);
+    const bones = {
+      arm: get("mixamorig:RightArm"),
+      fore: get("mixamorig:RightForeArm"),
+      hand: get("mixamorig:RightHand"),
+    };
+    const bind = {
+      arm: bones.arm?.quaternion.clone(),
+      fore: bones.fore?.quaternion.clone(),
+      hand: bones.hand?.quaternion.clone(),
+    };
+    return { bones, bind };
+  }, [scene]);
+
+  // Objetos reutilizables para no crear basura por frame
+  const tmp = useMemo(
+    () => ({ e: new THREE.Euler(), q: new THREE.Quaternion(), t: new THREE.Quaternion() }),
+    []
+  );
+
+  const poseBone = (bone, bindQ, rot, extraZ, weight) => {
+    if (!bone || !bindQ) return;
+    if (weight <= 0.0001) {
+      bone.quaternion.copy(bindQ);
+      return;
+    }
+    tmp.e.set(rot.x, rot.y, rot.z + extraZ);
+    tmp.q.setFromEuler(tmp.e);
+    tmp.t.copy(bindQ).multiply(tmp.q); // bind * delta (rotación local sumada)
+    bone.quaternion.copy(bindQ).slerp(tmp.t, weight);
+  };
+
   useFrame((state) => {
     const o = group.current;
     if (!o) return;
     const t = state.clock.elapsedTime;
 
-    // Idle base: flota y se balancea
+    // Idle base del cuerpo: flota y se balancea
     let rotX = 0;
     let rotY = Math.sin(t * 0.6) * 0.18;
     let rotZ = 0;
     let posY = Math.sin(t * 1.6) * 0.05;
 
-    // Gesto activo
+    // Peso del saludo (0 = brazo en pose natural)
+    let waveW = 0;
+
     const g = gestureRef.current;
     if (g && g.type !== "idle") {
       if (g.t0 == null) g.t0 = t;
       const dt = t - g.t0;
-      const dur = 1.2;
-      const decay = Math.max(0, 1 - dt / dur);
-      if (g.type === "greet") {
-        rotZ = Math.sin(dt * 14) * 0.2 * decay;
-        posY += Math.abs(Math.sin(dt * 7)) * 0.14 * decay;
+
+      if (g.type === "wave") {
+        const dur = WAVE.duration;
+        const inT = 0.3, outT = 0.5;
+        waveW = dt < inT ? dt / inT : dt > dur - outT ? Math.max(0, (dur - dt) / outT) : 1;
+        if (dt >= dur) g.type = "idle";
       } else if (g.type === "point") {
+        const dur = 1.2;
+        const decay = Math.max(0, 1 - dt / dur);
         rotX = (0.12 + Math.sin(dt * 10) * 0.1) * decay;
+        if (dt >= dur) g.type = "idle";
       }
-      if (dt >= dur) g.type = "idle";
     }
+
+    // Aplica el saludo a los huesos del brazo (o los deja en bind si waveW=0)
+    const dtNow = g && g.t0 != null ? t - g.t0 : 0;
+    const osc = Math.sin(dtNow * WAVE.oscSpeed) * WAVE.oscAmp * waveW;
+    poseBone(arm.bones.arm, arm.bind.arm, WAVE.arm, 0, waveW);
+    poseBone(arm.bones.fore, arm.bind.fore, WAVE.fore, osc, waveW);
+    poseBone(arm.bones.hand, arm.bind.hand, WAVE.hand, 0, waveW);
 
     // Al arrastrarlo: vaivén tipo péndulo, como si colgara del mouse
     if (dragging) {
@@ -108,7 +165,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
   const [dragging, setDragging] = useState(false);
 
   const prevWindows = useRef({});
-  const gesture = useRef({ type: "greet", t0: null });
+  const gesture = useRef({ type: "wave", t0: null });
   const playGesture = (type) => {
     gesture.current = { type, t0: null };
   };
@@ -121,7 +178,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
     if (!isOn || dismissed) return;
     const timer = setTimeout(() => {
       setVisible(true);
-      playGesture("greet");
+      playGesture("wave");
     }, 3500);
     return () => clearTimeout(timer);
   }, [isOn, dismissed]);
@@ -212,7 +269,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
         initial={{ opacity: 0, scale: 0.6 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 16 }}
-        onClick={() => (bubbleOpen ? playGesture("greet") : setBubbleOpen(true))}
+        onClick={() => (bubbleOpen ? playGesture("wave") : setBubbleOpen(true))}
         className={`w-48 h-48 max-md:w-36 max-md:h-36 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] ${
           dragging ? "cursor-grabbing" : "cursor-grab"
         }`}
