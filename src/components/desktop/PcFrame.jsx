@@ -4,6 +4,7 @@ import DesktopPortfolio from "./DesktopPortfolio";
 import StartUpPcFrame from "./StartUpPcFrame";
 import ShutDownPcFrame from "./ShutDownPcFrame";
 import PhoneFrame from "./PhoneFrame";
+import LaptopIntro from "./LaptopIntro";
 import useDeviceType from "../../hooks/useDeviceType";
 import startUpWindowsSound from "../../assets/Windows_Startup_Sound.wav";
 
@@ -12,6 +13,7 @@ function PcFrame() {
   const [isOn, setIsOn] = useState(true);
   const [isOffScreen, setIsOffScreen] = useState(false);
   const [audioOn, setAudioOn] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const timeoutRef = useRef(null);
   const { isMobile } = useDeviceType();
   const handleClick = () => {
@@ -86,6 +88,11 @@ function PcFrame() {
   // Modo móvil/tablet: marco de teléfono a pantalla completa
   if (isMobile) {
     return <PhoneFrame isOn={isOn}>{screen}</PhoneFrame>;
+  }
+
+  // Intro 3D: portátil que se abre y luego funde al escritorio 2D (solo escritorio)
+  if (!introDone) {
+    return <LaptopIntro onFinished={() => setIntroDone(true)} />;
   }
 
   // Modo escritorio: marco de monitor
