@@ -2,7 +2,6 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, Center } from "@react-three/drei";
-import * as THREE from "three";
 import { FaTimes, FaArrowRight } from "react-icons/fa";
 
 const MODEL_URL = "/modelo/migu.glb";
@@ -16,25 +15,12 @@ const MESSAGES = [
   "¿Listo para explorar? Disfruta el recorrido.",
 ];
 
-// Modelo 3D de Migu. Como el GLB viene sin material/textura, le asignamos uno
-// rojo de marca por código. Animación idle: flota y se balancea suavemente.
+// Modelo 3D de Migu (GLB con textura PBR propia).
+// Animación idle: flota y se balancea suavemente.
 function MiguModel() {
   const ref = useRef();
   const { scene } = useGLTF(MODEL_URL);
-
-  const model = useMemo(() => {
-    const clone = scene.clone(true);
-    clone.traverse((o) => {
-      if (o.isMesh) {
-        o.material = new THREE.MeshStandardMaterial({
-          color: "#e11d48",
-          metalness: 0.25,
-          roughness: 0.45,
-        });
-      }
-    });
-    return clone;
-  }, [scene]);
+  const model = useMemo(() => scene.clone(true), [scene]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
