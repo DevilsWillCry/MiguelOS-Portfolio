@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations, Center } from "@react-three/drei";
@@ -6,7 +6,6 @@ import * as THREE from "three";
 import { FaTimes, FaArrowRight } from "react-icons/fa";
 
 const MODEL_URL = "/modelo/migu.glb";
-const MODEL_SCALE = 1.5;
 
 // Idles que se ejecutan al azar (Hanging se reserva para el arrastre)
 const IDLE_POOL = [
@@ -38,10 +37,23 @@ const CONTEXT = {
 // - Idle (Neutral Idle) en bucle
 // - Wave (saludo) transitorio en eventos
 // - Hang (Hanging Idle) mientras se arrastra a Migu
+const TARGET_HEIGHT = 2.6; // alto deseado en el encuadre (auto-ajuste de escala)
+
 function MiguModel({ waveNonce, dragging }) {
   const group = useRef();
   const { scene, animations } = useGLTF(MODEL_URL);
   const { actions, mixer } = useAnimations(animations, group);
+
+  // Auto-escala: el modelo trae una escala interna desconocida, así que medimos
+  // su altura real y lo llevamos a TARGET_HEIGHT para encuadrarlo bien.
+  const fitScale = useMemo(() => {
+    scene.scale.set(1, 1, 1);
+    scene.updateWorldMatrix(true, true);
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    return size.y > 0 ? TARGET_HEIGHT / size.y : 1;
+  }, [scene]);
   const currentRef = useRef(null);
   const draggingRef = useRef(dragging);
   draggingRef.current = dragging;
@@ -129,7 +141,7 @@ function MiguModel({ waveNonce, dragging }) {
   return (
     <group ref={group}>
       <Center>
-        <primitive object={scene} scale={MODEL_SCALE} />
+        <primitive object={scene} scale={fitScale} />
       </Center>
     </group>
   );
