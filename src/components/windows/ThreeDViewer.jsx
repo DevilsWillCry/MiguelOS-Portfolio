@@ -95,10 +95,11 @@ export default function ThreeDViewer({
           dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
           style={{ x, y }}
           className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
+          onAnimationComplete={() => window.dispatchEvent(new Event("resize"))}
         >
           {/* Barra superior: único punto de arrastre (el lienzo queda libre para orbitar) */}
           <div
