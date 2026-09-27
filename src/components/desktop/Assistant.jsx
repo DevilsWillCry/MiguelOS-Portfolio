@@ -210,6 +210,7 @@ export default function Assistant({ isOn, windows, containerRef }) {
     setIndex(n);
     setMessage(MESSAGES[n]);
     setBubbleOpen(true);
+    playGesture("wave");
   };
 
   const close = () => {
