@@ -44,9 +44,21 @@ function MiguModel({ waveNonce, dragging }) {
   const { scene, animations } = useGLTF(MODEL_URL);
   const { actions, mixer } = useAnimations(animations, group);
 
-  // Auto-escala: el modelo trae una escala interna desconocida, así que medimos
-  // su altura real y lo llevamos a TARGET_HEIGHT para encuadrarlo bien.
+  // Auto-escala + ajuste de material. El GLB viene con metallicFactor=1 (default
+  // glTF) y sin mapa de entorno, por lo que el metal se renderiza NEGRO. Bajamos
+  // la metalicidad para que se vea el color de la textura.
   const fitScale = useMemo(() => {
+    scene.traverse((o) => {
+      if (!o.isMesh) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach((m) => {
+        if (!m) return;
+        m.metalness = 0.15;
+        m.roughness = 0.8;
+        m.envMapIntensity = 1;
+        m.needsUpdate = true;
+      });
+    });
     scene.scale.set(1, 1, 1);
     scene.updateWorldMatrix(true, true);
     const box = new THREE.Box3().setFromObject(scene);
