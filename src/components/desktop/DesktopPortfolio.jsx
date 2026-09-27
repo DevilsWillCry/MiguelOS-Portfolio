@@ -299,7 +299,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
       />
 
       {/* Asistente estilo Office Assistant */}
-      <Assistant isOn={isOn} windows={windows} />
+      <Assistant isOn={isOn} windows={windows} containerRef={screenRef} />
 
       {/* Barra de tareas - Windows 11 Modern Style (solo escritorio) */}
       {!isMobile && (

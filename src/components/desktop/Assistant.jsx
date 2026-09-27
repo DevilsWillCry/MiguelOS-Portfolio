@@ -7,7 +7,6 @@ import { FaTimes, FaArrowRight } from "react-icons/fa";
 
 const MODEL_URL = "/modelo/migu.glb";
 const MODEL_SCALE = 1.6;
-const DANCE_MAX = 2.8; // s máx que dura el baile antes de volver a idle
 
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
@@ -15,6 +14,7 @@ const MESSAGES = [
   "Prueba la app 'Visor 3D', ¡tiene un modelo interactivo!",
   "En 'Proyectos' encontrarás mi trabajo. Échale un ojo.",
   "Puedes cambiar el fondo desde 'Cambiar temas'.",
+  "Puedes arrastrarme por el escritorio si quieres.",
   "¿Listo para explorar? Disfruta el recorrido.",
 ];
 
@@ -25,42 +25,52 @@ const CONTEXT = {
   model3d: "¡El Visor 3D! Arrastra para rotar el modelo y usa la rueda para zoom.",
 };
 
-// Modelo riggeado de Migu: animación esquelética real (idle "Alert" en bucle,
-// y "Dance" como celebración que se dispara con danceNonce).
-function MiguModel({ danceNonce }) {
+// Modelo riggeado de Migu con animaciones de Mixamo:
+// - Idle (Neutral Idle) en bucle
+// - Wave (saludo) transitorio en eventos
+// - Hang (Hanging Idle) mientras se arrastra a Migu
+function MiguModel({ waveNonce, dragging }) {
   const group = useRef();
   const { scene, animations } = useGLTF(MODEL_URL);
   const { actions } = useAnimations(animations, group);
+  const currentRef = useRef(null);
 
-  // Idle en bucle
+  // Acción base según si se está arrastrando
   useEffect(() => {
-    const idle = actions?.Alert;
-    if (!idle) return;
-    idle.reset().fadeIn(0.4).play();
-    return () => idle.fadeOut(0.3);
-  }, [actions]);
+    if (!actions) return;
+    const next = actions[dragging ? "Hang" : "Idle"];
+    if (!next) return;
+    const prev = currentRef.current;
+    if (prev && prev !== next) prev.fadeOut(0.3);
+    next.reset().fadeIn(0.3).play();
+    currentRef.current = next;
+  }, [actions, dragging]);
 
-  // Baile al recibir un trigger, con retorno automático a idle
+  // Saludo transitorio (no interrumpe si está siendo arrastrado)
   useEffect(() => {
-    if (danceNonce === 0) return;
-    const dance = actions?.Dance;
-    const idle = actions?.Alert;
-    if (!dance) return;
+    if (waveNonce === 0 || dragging) return;
+    const wave = actions?.Wave;
+    if (!wave) return;
+    const base = currentRef.current;
 
-    dance.reset();
-    dance.setLoop(THREE.LoopRepeat);
-    idle?.fadeOut(0.2);
-    dance.fadeIn(0.2).play();
+    wave.reset();
+    wave.setLoop(THREE.LoopRepeat, 3); // el clip es corto: se repite
+    wave.timeScale = 0.9;
+    base?.fadeOut(0.2);
+    wave.fadeIn(0.2).play();
 
-    const dur = Math.min(dance.getClip().duration, DANCE_MAX);
+    const ms = Math.min((wave.getClip().duration / 0.9) * 3 * 1000, 2500);
     const timer = setTimeout(() => {
-      dance.fadeOut(0.4);
-      idle?.reset().fadeIn(0.4).play();
-    }, dur * 1000);
+      wave.fadeOut(0.3);
+      const b = actions[dragging ? "Hang" : "Idle"];
+      b?.reset().fadeIn(0.3).play();
+      currentRef.current = b;
+    }, ms);
     return () => clearTimeout(timer);
-  }, [danceNonce, actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waveNonce]);
 
-  // Flotación sutil (además de la animación esquelética)
+  // Flotación sutil
   useFrame((state) => {
     if (group.current) {
       group.current.position.y = Math.sin(state.clock.elapsedTime * 1.6) * 0.04;
@@ -78,23 +88,23 @@ function MiguModel({ danceNonce }) {
 
 useGLTF.preload(MODEL_URL);
 
-export default function Assistant({ isOn, windows }) {
+export default function Assistant({ isOn, windows, containerRef }) {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(true);
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState(MESSAGES[0]);
-  const [danceNonce, setDanceNonce] = useState(0);
+  const [waveNonce, setWaveNonce] = useState(0);
+  const [dragging, setDragging] = useState(false);
 
   const prevWindows = useRef({});
-  const dance = () => setDanceNonce((n) => n + 1);
+  const wave = () => setWaveNonce((n) => n + 1);
 
-  // Aparece un rato después de encender, bailando un saludo
   useEffect(() => {
     if (!isOn || dismissed) return;
     const timer = setTimeout(() => {
       setVisible(true);
-      dance();
+      wave();
     }, 3500);
     return () => clearTimeout(timer);
   }, [isOn, dismissed]);
@@ -103,7 +113,6 @@ export default function Assistant({ isOn, windows }) {
     if (!isOn) setVisible(false);
   }, [isOn]);
 
-  // Mensajes contextuales + baile al abrir una app
   useEffect(() => {
     if (!windows) return;
     if (!dismissed) {
@@ -113,7 +122,7 @@ export default function Assistant({ isOn, windows }) {
           setMessage(CONTEXT[k]);
           setBubbleOpen(true);
           setVisible(true);
-          dance();
+          wave();
         }
       });
     }
@@ -140,7 +149,7 @@ export default function Assistant({ isOn, windows }) {
     <div className="absolute bottom-20 right-4 z-[45] flex flex-col items-end gap-2 max-md:bottom-20 max-md:right-2">
       {/* Globo de diálogo */}
       <AnimatePresence>
-        {bubbleOpen && (
+        {bubbleOpen && !dragging && (
           <motion.div
             initial={{ opacity: 0, y: 12, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -173,14 +182,25 @@ export default function Assistant({ isOn, windows }) {
         )}
       </AnimatePresence>
 
-      {/* Personaje 3D */}
+      {/* Personaje 3D (arrastrable: al sostenerlo hace el "hanging idle") */}
       <motion.div
+        drag
+        dragConstraints={containerRef}
+        dragMomentum={false}
+        dragElastic={0.15}
+        onDragStart={() => {
+          setDragging(true);
+          setBubbleOpen(false);
+        }}
+        onDragEnd={() => setDragging(false)}
         initial={{ opacity: 0, y: 30, scale: 0.6 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 16 }}
-        onClick={() => (bubbleOpen ? dance() : setBubbleOpen(true))}
-        className="w-36 h-36 max-md:w-28 max-md:h-28 cursor-pointer drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
-        title="Migu, tu asistente"
+        onClick={() => (bubbleOpen ? wave() : setBubbleOpen(true))}
+        className={`w-36 h-36 max-md:w-28 max-md:h-28 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] ${
+          dragging ? "cursor-grabbing" : "cursor-grab"
+        }`}
+        title="Migu — arrástrame o haz clic"
       >
         <Canvas
           camera={{ position: [0, 0, 4.0], fov: 45 }}
@@ -191,7 +211,7 @@ export default function Assistant({ isOn, windows }) {
             <ambientLight intensity={0.7} />
             <directionalLight position={[3, 4, 5]} intensity={1.5} />
             <pointLight position={[-3, -2, 2]} intensity={0.7} color="#22d3ee" />
-            <MiguModel danceNonce={danceNonce} />
+            <MiguModel waveNonce={waveNonce} dragging={dragging} />
           </Suspense>
         </Canvas>
       </motion.div>
