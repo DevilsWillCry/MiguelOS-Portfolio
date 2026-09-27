@@ -93,22 +93,35 @@ function PcFrame() {
   // Modo escritorio: marco de monitor
   const monitor = (
     <>
-      {/* Marco sobresaliente del Frame del PC en TOP*/}
-      <div className="before:w-[90%] before:h-[90%] before:fixed before:border-solid before:border-t-[5px]  before:border-b-[5px] before:rounded-t-xl before:border-gray-400 before:top-0 before:z-[60] before:left-[50%] before:translate-x-[-50%] before:pointer-events-none items-center">
-        {/* Marco del Frame del PC*/}
+      {/* Bisel del monitor: degradado vertical + relieve con sombras internas/externas */}
+      <div
+        className="fixed top-0 left-[50%] translate-x-[-50%] w-[90%] h-[90%] z-0 rounded-t-2xl bg-gradient-to-b from-[#3d3d42] via-[#242427] to-[#141416] shadow-[0_28px_60px_-14px_rgba(0,0,0,0.85),0_1px_0_rgba(255,255,255,0.18),inset_0_2px_3px_rgba(255,255,255,0.16),inset_0_-8px_18px_rgba(0,0,0,0.7),inset_0_0_0_1px_rgba(0,0,0,0.5)]"
+      >
+        {/* Reflejo superior sutil del plástico */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 rounded-t-2xl bg-gradient-to-b from-white/10 to-transparent" />
+
+        {/* Lente de la cámara frontal del PC */}
+        <div className="h-3 w-3 absolute top-2.5 left-[50%] translate-x-[-50%] bg-[#0a0a0a] z-[101] rounded-full shadow-[inset_0_0_3px_rgba(0,0,0,0.9),0_0_4px_rgba(255,255,255,0.15)]">
+          <div className="h-[35%] w-[35%] bg-cyan-200/70 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        </div>
+
+        {/* Pantalla recesada dentro del bisel */}
         <div
-          className={`w-[90%] h-[90%] fixed border-solid border-[35px]  border-[#222222] rounded-t-xl  z-0 top-0 left-[50%] translate-x-[-50%] overflow-hidden shadow-[0_0_3px_0_white]  transition-all  duration-1000 ${
+          className={`absolute inset-[30px] top-[38px] rounded-lg overflow-hidden shadow-[inset_0_0_0_2px_rgba(0,0,0,0.9),inset_0_4px_14px_rgba(0,0,0,0.85),0_0_2px_rgba(255,255,255,0.2)] transition-all duration-1000 ${
             isOn ? "bg-none animate-tv-flicker" : "bg-black"
           }`}
         >
           {screen}
         </div>
 
-        {/* Lente de la cámara frontal del PC*/}
-        <div className="h-[2%] w-[1%] absolute top-3 left-[50%] translate-x-[-50%]  bg-black z-[101] rounded-full"><div className="h-[30%] w-[30%] bg-white rounded-full absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]"/></div>
+        {/* Marca del bisel inferior */}
+        <div className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.35em] font-semibold text-white/25">
+          Miguel<span className="text-red-600/60">OS</span>
+        </div>
       </div>
-      {/* Bloque inferior del PC*/}
-      <div className=" border-gray-500 flex flex-row items-center justify-end px-5 fixed bottom-3 right-[50%] translate-x-[50%] w-[95%] h-[9%] z-[60] bg-[#222222] rounded-br-2xl rounded-bl-2xl max-md:w-[90%]">
+
+      {/* Base / peana del monitor con relieve */}
+      <div className="flex flex-row items-center justify-end px-5 fixed bottom-3 right-[50%] translate-x-[50%] w-[95%] h-[9%] z-[60] rounded-b-2xl bg-gradient-to-b from-[#2b2b2f] to-[#121214] shadow-[0_12px_30px_-8px_rgba(0,0,0,0.85),inset_0_2px_2px_rgba(255,255,255,0.12),inset_0_-5px_12px_rgba(0,0,0,0.65)] max-md:w-[90%]">
         <Switchers isOn={isOn} isOff={isOffScreen} handleClick={handleClick} />
       </div>
     </>
