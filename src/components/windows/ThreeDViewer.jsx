@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars, Float, MeshDistortMaterial } from "@react-three/drei";
 import {
@@ -67,6 +67,8 @@ export default function ThreeDViewer({
   isMobile,
 }) {
   const { x, y, isMaximized, maximize, restore } = useWindowFrame();
+  const dragControls = useDragControls();
+  const canDrag = !isMobile && !isMaximized;
 
   useEffect(() => {
     if (!isOn) {
@@ -84,7 +86,9 @@ export default function ThreeDViewer({
     <AnimatePresence>
       {onMaximizeChange && (
         <motion.div
-          drag={!isMobile && !isMaximized}
+          drag={canDrag}
+          dragListener={false}
+          dragControls={dragControls}
           dragConstraints={containerRef}
           dragMomentum={false}
           dragElastic={0.8}
@@ -96,8 +100,13 @@ export default function ThreeDViewer({
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.25 }}
         >
-          {/* Barra superior (altura fija h-10 para anclar el lienzo debajo) */}
-          <div className="absolute top-0 left-0 right-0 h-10 bg-gray-800 px-3 rounded-t-xl flex justify-between items-center cursor-move z-30">
+          {/* Barra superior: único punto de arrastre (el lienzo queda libre para orbitar) */}
+          <div
+            className="absolute top-0 left-0 right-0 h-10 bg-gray-800 px-3 rounded-t-xl flex justify-between items-center cursor-move z-30"
+            onPointerDown={(e) => {
+              if (canDrag) dragControls.start(e);
+            }}
+          >
             <span className="text-sm">Visor 3D</span>
             <div className="flex gap-2 items-center">
               <FaMinus
@@ -136,12 +145,9 @@ export default function ThreeDViewer({
           </div>
 
           {/* Lienzo 3D con límites absolutos (top-10 = debajo de la barra) para
-              tener siempre un tamaño en píxeles definido. stopPropagation evita
-              que arrastrar la escena mueva la ventana. */}
-          <div
-            className="absolute top-10 left-0 right-0 bottom-0 overflow-hidden rounded-b-xl"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
+              tener siempre un tamaño en píxeles definido. Al arrastrarse la
+              ventana solo desde la barra, el canvas queda libre para OrbitControls. */}
+          <div className="absolute top-10 left-0 right-0 bottom-0 overflow-hidden rounded-b-xl">
             <Canvas
               camera={{ position: [0, 0, 6], fov: 45 }}
               dpr={[1, 2]}
