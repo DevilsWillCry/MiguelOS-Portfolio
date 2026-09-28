@@ -48,7 +48,7 @@ const SHIPS = [
     name: "Blue Falcon",
     url: falconUrl,
     perk: "Ágil y veloz (sin escudo)",
-    baseRotation: [-Math.PI / 2, 0, 0],
+    baseRotation: [Math.PI / 2, Math.PI, 0],
     handling: 14,
     speedMul: 1.15,
     shield: 0,
