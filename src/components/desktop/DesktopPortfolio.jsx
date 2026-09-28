@@ -6,14 +6,16 @@ import ProjectsDesktop from "../windows/ProjectsDesktop";
 import ThemeBackgroundChanger from "../windows/ThemeBackgroundChanger";
 import ThreeDViewer from "../windows/ThreeDViewer";
 import MiguSettings from "../windows/MiguSettings";
+import DodgeGame from "../windows/DodgeGame";
 
 import jsonIcon from "../../assets/json-icon.svg";
 import ProjectIcon from "../../assets/project_icon.png";
 import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
 import devIcon from "../../assets/dev-icon.svg";
 import miguAppIcon from "../../assets/icon_migu_v3.svg";
+import gameIcon from "../../assets/icon_game.svg";
 import windowsIcon from "../../assets/home_icon.min.svg";
-import mainBackground from "../../assets/main-background.jpg";
+import mainBackground from "../../assets/main-background-2.webp";
 import HomeDetail from "../taskbar/HomeDetail";
 import MobileNavBar from "../taskbar/MobileNavBar";
 import Assistant from "./Assistant";
@@ -24,6 +26,7 @@ const desktopIcons = [
   { id: "theme",    icon: ThemeChangerIcon, label: "Cambiar temas" },
   { id: "model3d",  icon: devIcon,          label: "Visor 3D"      },
   { id: "migu",     icon: miguAppIcon,      label: "Migu"          },
+  { id: "game",     icon: gameIcon,         label: "Neon Dodge"    },
 ];
 
 // Mapas id → icono / etiqueta, para la taskbar y el menú de inicio.
@@ -125,6 +128,7 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
     theme: { show: false, minimized: false },
     model3d: { show: false, minimized: false },
     migu: { show: false, minimized: false },
+    game: { show: false, minimized: false },
   });
 
   // Preferencias del asistente Migu (controladas por su app)
@@ -300,6 +304,16 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
       <ThreeDViewer
         onMinimizeChange={handleWindowsMinimized}
         onMaximizeChange={windows.model3d.show}
+        setMaximize={setWindows}
+        isOn={isOn}
+        containerRef={screenRef}
+        isMobile={isMobile}
+      />
+
+      {/* Juego Neon Dodge */}
+      <DodgeGame
+        onMinimizeChange={handleWindowsMinimized}
+        onMaximizeChange={windows.game.show}
         setMaximize={setWindows}
         isOn={isOn}
         containerRef={screenRef}
