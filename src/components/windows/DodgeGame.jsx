@@ -48,7 +48,7 @@ const SHIPS = [
     name: "Blue Falcon",
     url: falconUrl,
     perk: "Ágil y veloz (sin escudo)",
-    baseRotation: [Math.PI / 2, Math.PI, 0],
+    baseRotation: [0, 0, 0],
     handling: 14,
     speedMul: 1.15,
     shield: 0,
@@ -297,6 +297,16 @@ export default function DodgeGame({
   useEffect(() => {
     if (!isOn) setMaximize((prev) => ({ ...prev, game: { show: false, minimized: false } }));
   }, [isOn]);
+
+  // Al abrir la ventana, el canvas mide mal su tamaño (por la animación de
+  // entrada) y solo se corrige con un resize. Lo disparamos nosotros.
+  useEffect(() => {
+    if (!onMaximizeChange) return;
+    const ids = [60, 250, 600].map((d) =>
+      setTimeout(() => window.dispatchEvent(new Event("resize")), d)
+    );
+    return () => ids.forEach(clearTimeout);
+  }, [onMaximizeChange]);
 
   useEffect(() => {
     const down = (e) => {
