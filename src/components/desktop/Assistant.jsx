@@ -8,17 +8,6 @@ import { FaTimes, FaArrowRight } from "react-icons/fa";
 const MODEL_URL = "/modelo/migu.glb";
 const TARGET_HEIGHT = 2.6; // alto deseado en el encuadre (auto-ajuste de escala)
 
-// Saludo hecho a mano sobre ESTE rig (rotaciones locales sumadas a la pose bind).
-// Si el brazo queda al revés/raro, ajusta signos y valores aquí.
-const WAVE = {
-  duration: 2.2,
-  arm: { x: 0, y: 0, z: -2.1 }, // levanta el brazo hacia arriba/afuera
-  fore: { x: 0, y: 0, z: -0.5 }, // dobla el codo
-  hand: { x: 0, y: 0, z: 0.2 },
-  oscAmp: 0.5, // amplitud del "agite" de la mano
-  oscSpeed: 12,
-};
-
 const MESSAGES = [
   "¡Hola! Soy Migu, tu asistente de MiguelOS.",
   "Haz doble clic en los iconos del escritorio para abrir las apps.",
@@ -103,87 +92,32 @@ function MiguModel({ gestureRef, dragging, tint }) {
     });
   }, [scene, tint]);
 
-  // Huesos del brazo derecho + su rotación de bind (pose natural).
-  // GLTFLoader puede sanitizar los nombres (quitar ":"), así que buscamos por
-  // sufijo del nombre "limpio" para encontrarlos igual.
-  const arm = useMemo(() => {
-    const clean = (s) => (s || "").replace(/[^a-z]/gi, "").toLowerCase();
-    const find = (suffix) => {
-      let found = null;
-      scene.traverse((o) => {
-        if (!found && clean(o.name).endsWith(suffix)) found = o;
-      });
-      return found;
-    };
-    const bones = {
-      arm: find("rightarm"),
-      fore: find("rightforearm"),
-      hand: find("righthand"),
-    };
-    const bind = {
-      arm: bones.arm?.quaternion.clone(),
-      fore: bones.fore?.quaternion.clone(),
-      hand: bones.hand?.quaternion.clone(),
-    };
-    return { bones, bind };
-  }, [scene]);
-
-  // Objetos reutilizables para no crear basura por frame
-  const tmp = useMemo(
-    () => ({ e: new THREE.Euler(), q: new THREE.Quaternion(), t: new THREE.Quaternion() }),
-    []
-  );
-
-  const poseBone = (bone, bindQ, rot, extraZ, weight) => {
-    if (!bone || !bindQ) return;
-    if (weight <= 0.0001) {
-      bone.quaternion.copy(bindQ);
-      return;
-    }
-    tmp.e.set(rot.x, rot.y, rot.z + extraZ);
-    tmp.q.setFromEuler(tmp.e);
-    tmp.t.copy(bindQ).multiply(tmp.q); // bind * delta (rotación local sumada)
-    bone.quaternion.copy(bindQ).slerp(tmp.t, weight);
-  };
-
+  // Movimiento SOLO de cuerpo (no toca el rig): flota, se balancea y hace gestos
+  // moviendo todo el modelo (saludo = meneo + saltitos, señalar = inclinación).
   useFrame((state) => {
     const o = group.current;
     if (!o) return;
     const t = state.clock.elapsedTime;
 
-    // Idle base del cuerpo: flota y se balancea
     let rotX = 0;
     let rotY = Math.sin(t * 0.6) * 0.18;
     let rotZ = 0;
     let posY = Math.sin(t * 1.6) * 0.05;
 
-    // Peso del saludo (0 = brazo en pose natural)
-    let waveW = 0;
-
     const g = gestureRef.current;
     if (g && g.type !== "idle") {
       if (g.t0 == null) g.t0 = t;
       const dt = t - g.t0;
-
-      if (g.type === "wave") {
-        const dur = WAVE.duration;
-        const inT = 0.3, outT = 0.5;
-        waveW = dt < inT ? dt / inT : dt > dur - outT ? Math.max(0, (dur - dt) / outT) : 1;
-        if (dt >= dur) g.type = "idle";
+      const dur = 1.3;
+      const decay = Math.max(0, 1 - dt / dur);
+      if (g.type === "greet") {
+        rotZ += Math.sin(dt * 13) * 0.22 * decay; // se mece contento
+        posY += Math.abs(Math.sin(dt * 6.5)) * 0.14 * decay; // saltitos
       } else if (g.type === "point") {
-        const dur = 1.2;
-        const decay = Math.max(0, 1 - dt / dur);
-        rotX = (0.12 + Math.sin(dt * 10) * 0.1) * decay;
-        if (dt >= dur) g.type = "idle";
+        rotX += (0.14 + Math.sin(dt * 10) * 0.1) * decay; // se inclina
       }
+      if (dt >= dur) g.type = "idle";
     }
-
-    // Aplica el saludo a los huesos del brazo (o los deja en bind si waveW=0)
-    const dtNow = g && g.t0 != null ? t - g.t0 : 0;
-    const osc = Math.sin(dtNow * WAVE.oscSpeed) * WAVE.oscAmp * waveW;
-    poseBone(arm.bones.arm, arm.bind.arm, WAVE.arm, 0, waveW);
-    poseBone(arm.bones.fore, arm.bind.fore, WAVE.fore, osc, waveW);
-    poseBone(arm.bones.hand, arm.bind.hand, WAVE.hand, 0, waveW);
 
     // Al arrastrarlo: vaivén tipo péndulo, como si colgara del mouse
     if (dragging) {
@@ -212,7 +146,7 @@ export default function Assistant({ isOn, windows, containerRef, isMobile, enabl
   const [dragging, setDragging] = useState(false);
 
   const prevWindows = useRef({});
-  const gesture = useRef({ type: "wave", t0: null });
+  const gesture = useRef({ type: "greet", t0: null });
   const playGesture = (type) => {
     gesture.current = { type, t0: null };
   };
@@ -225,7 +159,7 @@ export default function Assistant({ isOn, windows, containerRef, isMobile, enabl
     if (!isOn) return;
     const timer = setTimeout(() => {
       setVisible(true);
-      playGesture("wave");
+      playGesture("greet");
     }, 3500);
     return () => clearTimeout(timer);
   }, [isOn]);
@@ -256,7 +190,7 @@ export default function Assistant({ isOn, windows, containerRef, isMobile, enabl
     setIndex(n);
     setMessage(MESSAGES[n]);
     setBubbleOpen(true);
-    playGesture("wave");
+    playGesture("greet");
   };
 
   // La X solo cierra el globo; Migu se queda en pantalla y arrastrable
@@ -266,11 +200,11 @@ export default function Assistant({ isOn, windows, containerRef, isMobile, enabl
   // lo reabre (tap en móvil, doble clic en PC vía onDoubleClick)
   const handleModelClick = () => {
     if (bubbleOpen) {
-      playGesture("wave");
+      playGesture("greet");
     } else if (isMobile) {
       setBubbleOpen(true);
     } else {
-      playGesture("wave");
+      playGesture("greet");
     }
   };
   const handleModelDoubleClick = () => {

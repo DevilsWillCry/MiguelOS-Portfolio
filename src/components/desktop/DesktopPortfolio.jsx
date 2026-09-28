@@ -11,7 +11,7 @@ import jsonIcon from "../../assets/json-icon.svg";
 import ProjectIcon from "../../assets/project_icon.png";
 import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
 import devIcon from "../../assets/dev-icon.svg";
-import miguAppIcon from "../../assets/profile-portfolio-svgrepo-com.svg";
+import miguAppIcon from "../../assets/icon_migu_v3.svg";
 import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background.jpg";
 import HomeDetail from "../taskbar/HomeDetail";
