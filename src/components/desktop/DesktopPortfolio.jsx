@@ -13,7 +13,7 @@ import ProjectIcon from "../../assets/project_icon.png";
 import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
 import devIcon from "../../assets/dev-icon.svg";
 import miguAppIcon from "../../assets/icon_migu_v3.svg";
-import gameIcon from "../../assets/icon_game.svg";
+import gameIcon from "../../assets/neon-dodge-assets/icon-neon-dodge.png";
 import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background-2.webp";
 import HomeDetail from "../taskbar/HomeDetail";
