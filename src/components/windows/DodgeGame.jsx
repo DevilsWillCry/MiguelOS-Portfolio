@@ -433,7 +433,7 @@ export default function DodgeGame({
 
           {/* Área de juego */}
           <div
-            className="absolute top-10 left-0 right-0 bottom-0 overflow-hidden rounded-b-xl select-none"
+            className="absolute top-10 left-0 right-0 bottom-0 overflow-hidden rounded-b-xl select-none touch-none"
             onPointerMove={handlePointer}
             onPointerDown={handlePointer}
           >

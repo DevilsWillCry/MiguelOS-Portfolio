@@ -16,8 +16,7 @@ import miguAppIcon from "../../assets/icon_migu_v3.svg";
 import gameIcon from "../../assets/neon-dodge-assets/icon-neon-dodge.png";
 import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background-2.webp";
-import HomeDetail from "../taskbar/HomeDetail";
-import MobileNavBar from "../taskbar/MobileNavBar";
+import HomeDetail from "../taskbar/HomeDetail";3
 import Assistant from "./Assistant";
 
 const desktopIcons = [
@@ -136,9 +135,15 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
   const [miguTint, setMiguTint] = useState(null);
 
   // Posiciones en el grid: cada icono ocupa una celda { col, row }
-  const [cells, setCells] = useState(
-    () => desktopIcons.map((_, i) => ({ col: 0, row: i }))
-  );
+  const [cells, setCells] = useState(() => {
+    // Cuántos iconos caben verticalmente antes de saltar a otra columna
+    const avail = typeof window !== "undefined" ? window.innerHeight : 800;
+    const maxRows = Math.max(1, Math.floor((avail - 150) / ICON_H));
+    return desktopIcons.map((_, i) => ({
+      col: Math.floor(i / maxRows),
+      row: i % maxRows,
+    }));
+  });
   const cellsRef = useRef(cells);
   cellsRef.current = cells;
 
