@@ -31,7 +31,7 @@ export default function HomeDetail({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.98 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[26rem] max-w-[92vw] rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900/90 to-gray-950/95 backdrop-blur-2xl shadow-2xl shadow-black/50 text-white p-4 z-[60]"
+          className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[26rem] max-w-[92vw] rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 to-gray-900 backdrop-blur-2xl shadow-2xl shadow-black/50 text-white p-4 z-[60]"
         >
           {/* Cabecera de perfil */}
           <div className="flex items-center gap-3 px-1 pb-3">
@@ -100,13 +100,10 @@ export default function HomeDetail({
               <FaRegUserCircle className="text-sm" />
               <span>Visitante</span>
             </div>
-            <button
-              onClick={onShutdown}
-              className="group flex items-center gap-2 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-red-600/80 border border-white/10 hover:border-red-500 rounded-lg px-3 py-1.5 transition-all active:scale-95"
-            >
-              <FaPowerOff className="text-red-500 group-hover:text-white transition-colors" />
-              <span>Apagar</span>
-            </button>
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+              <FaPowerOff className="text-red-500/70" />
+              <span>MiguelOS v1</span>
+            </div>
           </div>
         </motion.div>
       )}

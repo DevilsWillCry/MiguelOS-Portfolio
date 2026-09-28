@@ -157,7 +157,7 @@ export default withMT({
         rotateArrowDown: "rotateArrowDown 0.5s ease-in-out both",
       },
       backgroundImage: {
-        "background-main": "url('/src/assets/main-background.jpg')",
+        "background-main": "url('/src/assets/main-background-2.webp')",
       },
       boxShadow: {
         "custom-inset": "inset 0 0 0 2000px rgba(0, 0, 0, 0.5)",
