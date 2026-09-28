@@ -68,24 +68,37 @@ function MiguModel({ gestureRef, dragging, tint }) {
     return { fitScale: s, centerOffset: [-center.x * s, -center.y * s, -center.z * s] };
   }, [scene]);
 
-  // Tinte: el cuerpo es oscuro, así que multiplicar no basta. Con un color,
-  // reemplazamos la textura base por color plano (mantenemos el normal map para
-  // el relieve). En "Original" restauramos la textura.
+  // Tinte que CONSERVA los detalles: se mantiene la textura y se aplica una
+  // mezcla tipo "screen" en el shader → recolorea las zonas oscuras del cuerpo
+  // pero deja intactas las claras (ojos, abdomen). uAmount=0 => original.
   useEffect(() => {
     scene.traverse((o) => {
       if (!o.isMesh) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
       mats.forEach((m) => {
         if (!m) return;
-        if (m.userData._origMap === undefined) m.userData._origMap = m.map || null;
-        if (tint) {
-          m.map = null;
-          if (m.color) m.color.set(tint);
-        } else {
-          m.map = m.userData._origMap;
-          if (m.color) m.color.set("#ffffff");
+        if (!m.userData._tintPatched) {
+          m.userData._uTint = { value: new THREE.Color("#ffffff") };
+          m.userData._uAmount = { value: 0 };
+          m.onBeforeCompile = (shader) => {
+            shader.uniforms.uTint = m.userData._uTint;
+            shader.uniforms.uAmount = m.userData._uAmount;
+            shader.fragmentShader =
+              "uniform vec3 uTint;\nuniform float uAmount;\n" +
+              shader.fragmentShader.replace(
+                "#include <map_fragment>",
+                "#include <map_fragment>\n  diffuseColor.rgb = mix(diffuseColor.rgb, 1.0 - (1.0 - diffuseColor.rgb) * (1.0 - uTint), uAmount);"
+              );
+          };
+          m.userData._tintPatched = true;
+          m.needsUpdate = true;
         }
-        m.needsUpdate = true;
+        if (tint) {
+          m.userData._uTint.value.set(tint);
+          m.userData._uAmount.value = 0.8;
+        } else {
+          m.userData._uAmount.value = 0;
+        }
       });
     });
   }, [scene, tint]);
