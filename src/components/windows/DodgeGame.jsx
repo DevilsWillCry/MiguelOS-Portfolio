@@ -1,7 +1,8 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
+import { Stars, useGLTF } from "@react-three/drei";
+import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import * as THREE from "three";
 import {
   FaWindowClose,
@@ -20,11 +21,46 @@ const SPAWN_Z = -48; // z donde nacen los obstáculos
 const PAST_Z = 8.5; // z tras el cual el obstáculo se recicla (esquivado)
 const COUNT = 16; // obstáculos en el pool
 const BASE_SPEED = 15;
+const GRACE = 22; // distancia libre al inicio (para que no choque de una)
 const COLORS = ["#ef4444", "#22d3ee", "#a855f7", "#f59e0b", "#ec4899"];
+const MIGU_URL = "/modelo/migu.glb";
 const BEST_KEY = "miguos_dodge_best";
 
 function randX() {
   return (Math.random() * 2 - 1) * BOUND;
+}
+
+// Jugador: modelo de Migu clonado (para no chocar con el del escritorio),
+// escalado y en pose de bind.
+function MiguPlayer() {
+  const { scene } = useGLTF(MIGU_URL);
+  const model = useMemo(() => {
+    const c = skeletonClone(scene);
+    c.traverse((o) => {
+      if (o.isSkinnedMesh && o.skeleton) o.skeleton.pose();
+      if (o.isMesh) {
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach((m) => {
+          if (!m) return;
+          m.metalness = 0.15;
+          m.roughness = 0.8;
+        });
+      }
+    });
+    return c;
+  }, [scene]);
+
+  const fit = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+    const s = size.y > 0 ? 1.6 / size.y : 1;
+    return { s, offset: [-center.x * s, -center.y * s, -center.z * s] };
+  }, [model]);
+
+  return <primitive object={model} scale={fit.s} position={fit.offset} />;
 }
 
 function Scene({ gameRef, onScore, onGameOver, scoreRef }) {
@@ -35,16 +71,36 @@ function Scene({ gameRef, onScore, onGameOver, scoreRef }) {
     Array.from({ length: COUNT }, () => ({ x: 0, z: 0 }))
   );
 
+  // Formas geométricas aleatorias para los obstáculos
+  const shapes = useMemo(
+    () => [
+      new THREE.BoxGeometry(1.2, 1.2, 1.2),
+      new THREE.SphereGeometry(0.8, 24, 24),
+      new THREE.OctahedronGeometry(0.95), // rombo / diamante
+      new THREE.ConeGeometry(0.85, 1.5, 6),
+      new THREE.TorusGeometry(0.6, 0.26, 14, 28),
+      new THREE.TetrahedronGeometry(1.05),
+      new THREE.CylinderGeometry(0.7, 0.7, 1.3, 12),
+      new THREE.DodecahedronGeometry(0.85),
+    ],
+    []
+  );
+  useEffect(() => () => shapes.forEach((g) => g.dispose()), [shapes]);
+
+  const dressObstacle = (mesh) => {
+    if (!mesh) return;
+    mesh.geometry = shapes[Math.floor(Math.random() * shapes.length)];
+    const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+    mesh.material.color.set(c);
+    mesh.material.emissive.set(c);
+  };
+
   const initAll = () => {
     obsData.current.forEach((d, i) => {
       d.x = randX();
-      d.z = SPAWN_Z + i * (Math.abs(SPAWN_Z) / COUNT); // repartidos por el corredor
-      const mesh = obsRefs.current[i];
-      if (mesh) {
-        const c = COLORS[Math.floor(Math.random() * COLORS.length)];
-        mesh.material.color.set(c);
-        mesh.material.emissive.set(c);
-      }
+      // Espacio de gracia: el más cercano nace a -GRACE y el resto más lejos
+      d.z = -GRACE - i * 3.2 - Math.random() * 2;
+      dressObstacle(obsRefs.current[i]);
     });
     if (player.current) player.current.position.x = 0;
     gameRef.current.targetX = 0;
@@ -54,11 +110,7 @@ function Scene({ gameRef, onScore, onGameOver, scoreRef }) {
   const respawn = (d, mesh) => {
     d.z = SPAWN_Z - Math.random() * 12;
     d.x = randX();
-    if (mesh) {
-      const c = COLORS[Math.floor(Math.random() * COLORS.length)];
-      mesh.material.color.set(c);
-      mesh.material.emissive.set(c);
-    }
+    dressObstacle(mesh);
   };
 
   useFrame((state, delta) => {
@@ -86,8 +138,7 @@ function Scene({ gameRef, onScore, onGameOver, scoreRef }) {
         12,
         dt
       );
-      player.current.rotation.z = (g.targetX - player.current.position.x) * 0.25;
-      player.current.rotation.y += dt * 1.5;
+      player.current.rotation.z = (g.targetX - player.current.position.x) * 0.3;
       g.playerX = player.current.position.x;
     }
 
@@ -135,23 +186,14 @@ function Scene({ gameRef, onScore, onGameOver, scoreRef }) {
         position={[0, 0, 0]}
       />
 
-      {/* Jugador */}
-      <mesh ref={player} position={[0, 0.6, PLAYER_Z]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          color="#ef4444"
-          emissive="#ef4444"
-          emissiveIntensity={0.9}
-          metalness={0.3}
-          roughness={0.3}
-          toneMapped={false}
-        />
-      </mesh>
+      {/* Jugador: Migu */}
+      <group ref={player} position={[0, 0.9, PLAYER_Z]}>
+        <MiguPlayer />
+      </group>
 
-      {/* Obstáculos */}
+      {/* Obstáculos (geometría asignada dinámicamente al reaparecer) */}
       {Array.from({ length: COUNT }).map((_, i) => (
         <mesh key={i} ref={(el) => (obsRefs.current[i] = el)} position={[0, 0.6, SPAWN_Z]}>
-          <boxGeometry args={[1.2, 1.2, 1.2]} />
           <meshStandardMaterial
             color="#22d3ee"
             emissive="#22d3ee"
