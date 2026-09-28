@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Stars, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -37,7 +37,7 @@ const SHIPS = [
     name: "Fire Stingray",
     url: stingrayUrl,
     perk: "Blindada: aguanta 1 golpe",
-    baseRotation: [0, 0, 0],
+    baseRotation: [0, Math.PI, 0],
     handling: 9,
     speedMul: 0.95,
     shield: 1,
@@ -48,7 +48,7 @@ const SHIPS = [
     name: "Blue Falcon",
     url: falconUrl,
     perk: "Ágil y veloz (sin escudo)",
-    baseRotation: [0, 0, 0],
+    baseRotation: [0, Math.PI, 0],
     handling: 14,
     speedMul: 1.15,
     shield: 0,
@@ -59,8 +59,8 @@ const SHIPS = [
 useGLTF.preload(stingrayUrl);
 useGLTF.preload(falconUrl);
 
-function randX() {
-  return (Math.random() * 2 - 1) * BOUND;
+function randX(bound) {
+  return (Math.random() * 2 - 1) * bound;
 }
 
 // Carga y normaliza una nave: la centra, la escala a un tamaño objetivo y le
@@ -95,6 +95,18 @@ function Scene({ gameRef, onScore, onGameOver, onShieldChange, scoreRef, phase, 
   const obsRefs = useRef([]);
   const obsData = useRef(Array.from({ length: COUNT }, () => ({ x: 0, z: 0 })));
 
+  // Ancho jugable dinámico: se ajusta al aspecto del canvas para que la nave y
+  // los obstáculos SIEMPRE quepan (clave en móvil / ventanas angostas).
+  const { camera, size } = useThree();
+  useEffect(() => {
+    const vfov = (camera.fov * Math.PI) / 180;
+    const dist = camera.position.z - PLAYER_Z;
+    const visH = 2 * Math.tan(vfov / 2) * dist;
+    const aspect = size.width / Math.max(1, size.height);
+    const visW = visH * aspect;
+    gameRef.current.bound = THREE.MathUtils.clamp(visW / 2 - 1.0, 1.2, BOUND);
+  }, [size.width, size.height, camera, gameRef]);
+
   const shapes = useMemo(
     () => [
       new THREE.BoxGeometry(1.2, 1.2, 1.2),
@@ -119,8 +131,9 @@ function Scene({ gameRef, onScore, onGameOver, onShieldChange, scoreRef, phase, 
   };
 
   const initAll = () => {
+    const b = gameRef.current.bound || BOUND;
     obsData.current.forEach((d, i) => {
-      d.x = randX();
+      d.x = randX(b);
       d.z = -GRACE - i * 3.2 - Math.random() * 2;
       dressObstacle(obsRefs.current[i]);
     });
@@ -130,7 +143,7 @@ function Scene({ gameRef, onScore, onGameOver, onShieldChange, scoreRef, phase, 
 
   const respawn = (d, mesh) => {
     d.z = SPAWN_Z - Math.random() * 12;
-    d.x = randX();
+    d.x = randX(gameRef.current.bound || BOUND);
     dressObstacle(mesh);
   };
 
@@ -156,8 +169,9 @@ function Scene({ gameRef, onScore, onGameOver, onShieldChange, scoreRef, phase, 
         player.current.visible = true;
       } else {
         // Juego: se controla en el carril
-        if (g.keyDir) g.targetX += g.keyDir * BOUND * 1.4 * dt;
-        g.targetX = THREE.MathUtils.clamp(g.targetX, -BOUND, BOUND);
+        const b = g.bound || BOUND;
+        if (g.keyDir) g.targetX += g.keyDir * b * 1.4 * dt;
+        g.targetX = THREE.MathUtils.clamp(g.targetX, -b, b);
         const px = THREE.MathUtils.damp(player.current.position.x, g.targetX, g.handling || 10, dt);
         player.current.position.set(px, 0.9, PLAYER_Z);
         player.current.rotation.set(0, 0, (g.targetX - px) * 0.35);
@@ -282,6 +296,7 @@ export default function DodgeGame({
     speedMul: 1,
     shield: 0,
     invulnUntil: 0,
+    bound: BOUND,
   });
 
   const ship = SHIPS[shipIndex];
@@ -297,16 +312,6 @@ export default function DodgeGame({
   useEffect(() => {
     if (!isOn) setMaximize((prev) => ({ ...prev, game: { show: false, minimized: false } }));
   }, [isOn]);
-
-  // Al abrir la ventana, el canvas mide mal su tamaño (por la animación de
-  // entrada) y solo se corrige con un resize. Lo disparamos nosotros.
-  useEffect(() => {
-    if (!onMaximizeChange) return;
-    const ids = [60, 250, 600].map((d) =>
-      setTimeout(() => window.dispatchEvent(new Event("resize")), d)
-    );
-    return () => ids.forEach(clearTimeout);
-  }, [onMaximizeChange]);
 
   useEffect(() => {
     const down = (e) => {
@@ -363,7 +368,8 @@ export default function DodgeGame({
     if (phase !== "playing") return;
     const rect = e.currentTarget.getBoundingClientRect();
     const ndc = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    gameRef.current.targetX = THREE.MathUtils.clamp(ndc * BOUND, -BOUND, BOUND);
+    const b = gameRef.current.bound || BOUND;
+    gameRef.current.targetX = THREE.MathUtils.clamp(ndc * b, -b, b);
   };
 
   const baseClass =
@@ -380,9 +386,9 @@ export default function DodgeGame({
           dragMomentum={false}
           style={{ x, y }}
           className={getWindowClass({ isMobile, isMaximized, base: baseClass })}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
         >
           {/* Barra superior */}
