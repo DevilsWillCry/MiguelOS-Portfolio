@@ -1,8 +1,7 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars, useGLTF } from "@react-three/drei";
-import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { Stars } from "@react-three/drei";
 import * as THREE from "three";
 import {
   FaWindowClose,
@@ -23,44 +22,52 @@ const COUNT = 16; // obstáculos en el pool
 const BASE_SPEED = 15;
 const GRACE = 22; // distancia libre al inicio (para que no choque de una)
 const COLORS = ["#ef4444", "#22d3ee", "#a855f7", "#f59e0b", "#ec4899"];
-const MIGU_URL = "/modelo/migu.glb";
 const BEST_KEY = "miguos_dodge_best";
 
 function randX() {
   return (Math.random() * 2 - 1) * BOUND;
 }
 
-// Jugador: modelo de Migu clonado (para no chocar con el del escritorio),
-// escalado y en pose de bind.
-function MiguPlayer() {
-  const { scene } = useGLTF(MIGU_URL);
-  const model = useMemo(() => {
-    const c = skeletonClone(scene);
-    c.traverse((o) => {
-      if (o.isSkinnedMesh && o.skeleton) o.skeleton.pose();
-      if (o.isMesh) {
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach((m) => {
-          if (!m) return;
-          m.metalness = 0.15;
-          m.roughness = 0.8;
-        });
-      }
-    });
-    return c;
-  }, [scene]);
-
-  const fit = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(model);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
-    const s = size.y > 0 ? 1.6 / size.y : 1;
-    return { s, offset: [-center.x * s, -center.y * s, -center.z * s] };
-  }, [model]);
-
-  return <primitive object={model} scale={fit.s} position={fit.offset} />;
+// Nave placeholder (se reemplazará por un modelo .glb low-poly tipo Star Fox).
+function ShipPlayer() {
+  return (
+    <group rotation={[0, 0, 0]}>
+      {/* Fuselaje: cono apuntando hacia el corredor (-z) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.5, 1.7, 8]} />
+        <meshStandardMaterial
+          color="#ef4444"
+          emissive="#ef4444"
+          emissiveIntensity={0.85}
+          metalness={0.4}
+          roughness={0.3}
+          toneMapped={false}
+        />
+      </mesh>
+      {/* Alas */}
+      <mesh position={[0, -0.1, 0.35]}>
+        <boxGeometry args={[1.7, 0.08, 0.5]} />
+        <meshStandardMaterial
+          color="#22d3ee"
+          emissive="#22d3ee"
+          emissiveIntensity={0.6}
+          metalness={0.3}
+          roughness={0.4}
+          toneMapped={false}
+        />
+      </mesh>
+      {/* Cabina */}
+      <mesh position={[0, 0.18, -0.1]}>
+        <sphereGeometry args={[0.28, 16, 16]} />
+        <meshStandardMaterial
+          color="#a855f7"
+          emissive="#a855f7"
+          emissiveIntensity={0.5}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
+  );
 }
 
 function Scene({ gameRef, onScore, onGameOver, scoreRef }) {
@@ -186,9 +193,9 @@ function Scene({ gameRef, onScore, onGameOver, scoreRef }) {
         position={[0, 0, 0]}
       />
 
-      {/* Jugador: Migu */}
-      <group ref={player} position={[0, 0.9, PLAYER_Z]}>
-        <MiguPlayer />
+      {/* Jugador: nave */}
+      <group ref={player} position={[0, 0.8, PLAYER_Z]}>
+        <ShipPlayer />
       </group>
 
       {/* Obstáculos (geometría asignada dinámicamente al reaparecer) */}
