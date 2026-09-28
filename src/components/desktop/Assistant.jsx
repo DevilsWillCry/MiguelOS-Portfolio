@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
@@ -31,11 +31,14 @@ function MiguModel({ gestureRef, dragging, tint }) {
   const group = useRef();
   const { scene } = useGLTF(MODEL_URL);
 
-  // Auto-escala + centrado DETERMINISTA (se resetea antes de medir, así no se
-  // acumula desplazamiento al montar/desmontar). Devuelve escala y offset.
-  const { fitScale, centerOffset } = useMemo(() => {
+  // Auto-escala + centrado. Se mide UNA vez tras montar (timing fiable, con el
+  // modelo ya en el grafo) y se guarda en estado, para que el tamaño sea estable
+  // y no cambie al abrir otras apps.
+  const [fit, setFit] = useState({ scale: 1, offset: [0, 0, 0] });
+
+  useEffect(() => {
+    // Pose de bind + material (una sola vez)
     scene.traverse((o) => {
-      // Coloca el esqueleto en su pose de bind (evita el "derretido")
       if (o.isSkinnedMesh && o.skeleton) o.skeleton.pose();
       if (!o.isMesh) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
@@ -46,18 +49,41 @@ function MiguModel({ gestureRef, dragging, tint }) {
         m.needsUpdate = true;
       });
     });
-    scene.position.set(0, 0, 0);
-    scene.rotation.set(0, 0, 0);
-    scene.scale.set(1, 1, 1);
-    scene.updateWorldMatrix(true, true);
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
-    const s = size.y > 0 ? TARGET_HEIGHT / size.y : 1;
-    return { fitScale: s, centerOffset: [-center.x * s, -center.y * s, -center.z * s] };
+
+    const measure = () => {
+      // Mide la geometría en espacio local (sin depender del grafo padre),
+      // resolviendo el transform de cada malla respecto a la raíz del modelo.
+      scene.updateWorldMatrix(true, true);
+      const inv = new THREE.Matrix4().copy(scene.matrixWorld).invert();
+      const box = new THREE.Box3();
+      const tmp = new THREE.Box3();
+      const mtx = new THREE.Matrix4();
+      scene.traverse((o) => {
+        if (o.isMesh && o.geometry) {
+          o.geometry.computeBoundingBox();
+          tmp.copy(o.geometry.boundingBox);
+          mtx.multiplyMatrices(inv, o.matrixWorld);
+          tmp.applyMatrix4(mtx);
+          box.union(tmp);
+        }
+      });
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
+      if (size.y > 0.0001 && isFinite(size.y)) {
+        const s = TARGET_HEIGHT / size.y;
+        setFit({ scale: s, offset: [-center.x * s, -center.y * s, -center.z * s] });
+      }
+    };
+
+    measure();
+    const raf = requestAnimationFrame(measure); // segunda pasada por si acaso
+    return () => cancelAnimationFrame(raf);
   }, [scene]);
+
+  const fitScale = fit.scale;
+  const centerOffset = fit.offset;
 
   // Tinte que CONSERVA los detalles: se mantiene la textura y se aplica una
   // mezcla tipo "screen" en el shader → recolorea las zonas oscuras del cuerpo
