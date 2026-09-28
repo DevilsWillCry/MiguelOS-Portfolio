@@ -38,7 +38,7 @@ const CONTEXT = {
 
 // Modelo ESTÁTICO (en su pose natural, sin animación esquelética → sin deformación).
 // El movimiento se hace por transformación de todo el cuerpo (flotar, gestos, vaivén).
-function MiguModel({ gestureRef, dragging }) {
+function MiguModel({ gestureRef, dragging, tint }) {
   const group = useRef();
   const { scene } = useGLTF(MODEL_URL);
 
@@ -61,6 +61,17 @@ function MiguModel({ gestureRef, dragging }) {
     box.getSize(size);
     return size.y > 0 ? TARGET_HEIGHT / size.y : 1;
   }, [scene]);
+
+  // Tinte de color: multiplica la textura base (null = original)
+  useEffect(() => {
+    scene.traverse((o) => {
+      if (!o.isMesh) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach((m) => {
+        if (m?.color) m.color.set(tint || "#ffffff");
+      });
+    });
+  }, [scene, tint]);
 
   // Huesos del brazo derecho + su rotación de bind (pose natural).
   // GLTFLoader puede sanitizar los nombres (quitar ":"), así que buscamos por
@@ -165,7 +176,7 @@ function MiguModel({ gestureRef, dragging }) {
 
 useGLTF.preload(MODEL_URL);
 
-export default function Assistant({ isOn, windows, containerRef, isMobile }) {
+export default function Assistant({ isOn, windows, containerRef, isMobile, enabled = true, tint = null }) {
   const [visible, setVisible] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(true);
   const [index, setIndex] = useState(0);
@@ -238,7 +249,7 @@ export default function Assistant({ isOn, windows, containerRef, isMobile }) {
     if (!isMobile && !bubbleOpen) setBubbleOpen(true);
   };
 
-  if (!visible) return null;
+  if (!visible || !enabled) return null;
 
   return (
     <div className="absolute bottom-20 right-4 z-[45] flex flex-col items-end gap-2 max-md:bottom-20 max-md:right-2">
@@ -306,7 +317,7 @@ export default function Assistant({ isOn, windows, containerRef, isMobile }) {
             <ambientLight intensity={0.8} />
             <directionalLight position={[3, 4, 5]} intensity={1.6} />
             <pointLight position={[-3, -2, 2]} intensity={0.7} color="#22d3ee" />
-            <MiguModel gestureRef={gesture} dragging={dragging} />
+            <MiguModel gestureRef={gesture} dragging={dragging} tint={tint} />
           </Suspense>
         </Canvas>
       </motion.div>

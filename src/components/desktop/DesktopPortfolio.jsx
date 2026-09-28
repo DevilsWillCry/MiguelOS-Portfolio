@@ -5,11 +5,13 @@ import AboutMeDesktop from "../windows/AboutMeDesktop";
 import ProjectsDesktop from "../windows/ProjectsDesktop";
 import ThemeBackgroundChanger from "../windows/ThemeBackgroundChanger";
 import ThreeDViewer from "../windows/ThreeDViewer";
+import MiguSettings from "../windows/MiguSettings";
 
 import jsonIcon from "../../assets/json-icon.svg";
 import ProjectIcon from "../../assets/project_icon.png";
 import ThemeChangerIcon from "../../assets/theme-changer-icon.svg";
 import devIcon from "../../assets/dev-icon.svg";
+import miguAppIcon from "../../assets/profile-portfolio-svgrepo-com.svg";
 import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background.jpg";
 import HomeDetail from "../taskbar/HomeDetail";
@@ -21,6 +23,7 @@ const desktopIcons = [
   { id: "projects", icon: ProjectIcon,      label: "Proyectos"     },
   { id: "theme",    icon: ThemeChangerIcon, label: "Cambiar temas" },
   { id: "model3d",  icon: devIcon,          label: "Visor 3D"      },
+  { id: "migu",     icon: miguAppIcon,      label: "Migu"          },
 ];
 
 // Mapas id → icono / etiqueta, para la taskbar y el menú de inicio.
@@ -121,7 +124,12 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
     projects: { show: false, minimized: false },
     theme: { show: false, minimized: false },
     model3d: { show: false, minimized: false },
+    migu: { show: false, minimized: false },
   });
+
+  // Preferencias del asistente Migu (controladas por su app)
+  const [miguVisible, setMiguVisible] = useState(true);
+  const [miguTint, setMiguTint] = useState(null);
 
   // Posiciones en el grid: cada icono ocupa una celda { col, row }
   const [cells, setCells] = useState(
@@ -298,8 +306,28 @@ export default function DesktopPortfolio({ onMinimizeChange, isOn, isOff, isMobi
         isMobile={isMobile}
       />
 
+      {/* App para personalizar a Migu */}
+      <MiguSettings
+        onMinimizeChange={handleWindowsMinimized}
+        onMaximizeChange={windows.migu.show}
+        setMaximize={setWindows}
+        containerRef={screenRef}
+        isMobile={isMobile}
+        miguVisible={miguVisible}
+        setMiguVisible={setMiguVisible}
+        miguTint={miguTint}
+        setMiguTint={setMiguTint}
+      />
+
       {/* Asistente estilo Office Assistant */}
-      <Assistant isOn={isOn} windows={windows} containerRef={screenRef} isMobile={isMobile} />
+      <Assistant
+        isOn={isOn}
+        windows={windows}
+        containerRef={screenRef}
+        isMobile={isMobile}
+        enabled={miguVisible}
+        tint={miguTint}
+      />
 
       {/* Barra de tareas - Windows 11 Modern Style (solo escritorio) */}
       {!isMobile && (
