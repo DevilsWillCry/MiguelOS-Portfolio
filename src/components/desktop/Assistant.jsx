@@ -213,6 +213,17 @@ export default function Assistant({ isOn, windows, containerRef, isMobile, enabl
     );
   }, [windows]);
 
+  // Al aparecer, el canvas de Migu se inicializa con un tamaño mal medido y solo
+  // se corrige con un evento resize (el mismo que dispara el Visor 3D). Lo
+  // disparamos nosotros varias veces tras aparecer para que tome el tamaño bien.
+  useEffect(() => {
+    if (!visible) return;
+    const ids = [60, 250, 600].map((d) =>
+      setTimeout(() => window.dispatchEvent(new Event("resize")), d)
+    );
+    return () => ids.forEach(clearTimeout);
+  }, [visible]);
+
   const nextTip = () => {
     const n = (index + 1) % MESSAGES.length;
     setIndex(n);
