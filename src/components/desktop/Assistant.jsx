@@ -165,9 +165,8 @@ function MiguModel({ gestureRef, dragging }) {
 
 useGLTF.preload(MODEL_URL);
 
-export default function Assistant({ isOn, windows, containerRef }) {
+export default function Assistant({ isOn, windows, containerRef, isMobile }) {
   const [visible, setVisible] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(true);
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState(MESSAGES[0]);
@@ -184,35 +183,34 @@ export default function Assistant({ isOn, windows, containerRef }) {
   const y = useMotionValue(0);
 
   useEffect(() => {
-    if (!isOn || dismissed) return;
+    if (!isOn) return;
     const timer = setTimeout(() => {
       setVisible(true);
       playGesture("wave");
     }, 3500);
     return () => clearTimeout(timer);
-  }, [isOn, dismissed]);
+  }, [isOn]);
 
   useEffect(() => {
     if (!isOn) setVisible(false);
   }, [isOn]);
 
+  // Mensajes contextuales al abrir una app (reabre el globo aunque estuviera cerrado)
   useEffect(() => {
     if (!windows) return;
-    if (!dismissed) {
-      Object.keys(windows).forEach((k) => {
-        const openedNow = windows[k].show && !prevWindows.current[k]?.show;
-        if (openedNow && CONTEXT[k]) {
-          setMessage(CONTEXT[k]);
-          setBubbleOpen(true);
-          setVisible(true);
-          playGesture("point");
-        }
-      });
-    }
+    Object.keys(windows).forEach((k) => {
+      const openedNow = windows[k].show && !prevWindows.current[k]?.show;
+      if (openedNow && CONTEXT[k]) {
+        setMessage(CONTEXT[k]);
+        setBubbleOpen(true);
+        setVisible(true);
+        playGesture("point");
+      }
+    });
     prevWindows.current = Object.fromEntries(
       Object.keys(windows).map((k) => [k, { show: windows[k].show }])
     );
-  }, [windows, dismissed]);
+  }, [windows]);
 
   const nextTip = () => {
     const n = (index + 1) % MESSAGES.length;
@@ -222,9 +220,22 @@ export default function Assistant({ isOn, windows, containerRef }) {
     playGesture("wave");
   };
 
-  const close = () => {
-    setVisible(false);
-    setDismissed(true);
+  // La X solo cierra el globo; Migu se queda en pantalla y arrastrable
+  const closeBubble = () => setBubbleOpen(false);
+
+  // Clic/tap sobre Migu: si el globo está abierto, saluda; si está cerrado,
+  // lo reabre (tap en móvil, doble clic en PC vía onDoubleClick)
+  const handleModelClick = () => {
+    if (bubbleOpen) {
+      playGesture("wave");
+    } else if (isMobile) {
+      setBubbleOpen(true);
+    } else {
+      playGesture("wave");
+    }
+  };
+  const handleModelDoubleClick = () => {
+    if (!isMobile && !bubbleOpen) setBubbleOpen(true);
   };
 
   if (!visible) return null;
@@ -245,8 +256,8 @@ export default function Assistant({ isOn, windows, containerRef }) {
             <div className="flex items-start justify-between gap-2 mb-1">
               <span className="text-xs font-bold text-red-400">Migu</span>
               <button
-                onClick={close}
-                aria-label="Cerrar asistente"
+                onClick={closeBubble}
+                aria-label="Cerrar mensaje"
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 <FaTimes className="text-xs" />
@@ -279,11 +290,12 @@ export default function Assistant({ isOn, windows, containerRef }) {
         initial={{ opacity: 0, scale: 0.6 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 16 }}
-        onClick={() => (bubbleOpen ? playGesture("wave") : setBubbleOpen(true))}
+        onClick={handleModelClick}
+        onDoubleClick={handleModelDoubleClick}
         className={`w-48 h-48 max-md:w-36 max-md:h-36 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] ${
           dragging ? "cursor-grabbing" : "cursor-grab"
         }`}
-        title="Migu — arrástrame o haz clic"
+        title="Migu — arrástrame; doble clic para ver el mensaje"
       >
         <Canvas
           camera={{ position: [0, 0.2, 5.2], fov: 45 }}
