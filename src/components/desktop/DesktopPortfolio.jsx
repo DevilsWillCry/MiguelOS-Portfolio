@@ -16,7 +16,8 @@ import miguAppIcon from "../../assets/icon_migu_v3.svg";
 import gameIcon from "../../assets/neon-dodge-assets/icon-neon-dodge.png";
 import windowsIcon from "../../assets/home_icon.min.svg";
 import mainBackground from "../../assets/main-background-2.webp";
-import HomeDetail from "../taskbar/HomeDetail";3
+import HomeDetail from "../taskbar/HomeDetail";
+import MobileNavBar from "../taskbar/MobileNavBar";
 import Assistant from "./Assistant";
 
 const desktopIcons = [
