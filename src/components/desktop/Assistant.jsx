@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF, Center } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { FaTimes, FaArrowRight } from "react-icons/fa";
 
@@ -42,8 +42,9 @@ function MiguModel({ gestureRef, dragging, tint }) {
   const group = useRef();
   const { scene } = useGLTF(MODEL_URL);
 
-  // Auto-escala + material (baja metalicidad para que no se vea negro)
-  const fitScale = useMemo(() => {
+  // Auto-escala + centrado DETERMINISTA (se resetea antes de medir, así no se
+  // acumula desplazamiento al montar/desmontar). Devuelve escala y offset.
+  const { fitScale, centerOffset } = useMemo(() => {
     scene.traverse((o) => {
       if (!o.isMesh) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
@@ -54,21 +55,37 @@ function MiguModel({ gestureRef, dragging, tint }) {
         m.needsUpdate = true;
       });
     });
+    scene.position.set(0, 0, 0);
+    scene.rotation.set(0, 0, 0);
     scene.scale.set(1, 1, 1);
     scene.updateWorldMatrix(true, true);
     const box = new THREE.Box3().setFromObject(scene);
     const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
     box.getSize(size);
-    return size.y > 0 ? TARGET_HEIGHT / size.y : 1;
+    box.getCenter(center);
+    const s = size.y > 0 ? TARGET_HEIGHT / size.y : 1;
+    return { fitScale: s, centerOffset: [-center.x * s, -center.y * s, -center.z * s] };
   }, [scene]);
 
-  // Tinte de color: multiplica la textura base (null = original)
+  // Tinte: el cuerpo es oscuro, así que multiplicar no basta. Con un color,
+  // reemplazamos la textura base por color plano (mantenemos el normal map para
+  // el relieve). En "Original" restauramos la textura.
   useEffect(() => {
     scene.traverse((o) => {
       if (!o.isMesh) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
       mats.forEach((m) => {
-        if (m?.color) m.color.set(tint || "#ffffff");
+        if (!m) return;
+        if (m.userData._origMap === undefined) m.userData._origMap = m.map || null;
+        if (tint) {
+          m.map = null;
+          if (m.color) m.color.set(tint);
+        } else {
+          m.map = m.userData._origMap;
+          if (m.color) m.color.set("#ffffff");
+        }
+        m.needsUpdate = true;
       });
     });
   }, [scene, tint]);
@@ -167,9 +184,7 @@ function MiguModel({ gestureRef, dragging, tint }) {
 
   return (
     <group ref={group}>
-      <Center>
-        <primitive object={scene} scale={fitScale} />
-      </Center>
+      <primitive object={scene} scale={fitScale} position={centerOffset} />
     </group>
   );
 }
