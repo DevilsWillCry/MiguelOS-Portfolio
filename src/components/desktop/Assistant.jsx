@@ -276,6 +276,7 @@ export default function Assistant({ isOn, windows, containerRef, isMobile, enabl
           camera={{ position: [0, 0.2, 5.2], fov: 45 }}
           dpr={[1, 2]}
           gl={{ alpha: true }}
+          resize={{ debounce: 0 }}
         >
           <Suspense fallback={null}>
             <ambientLight intensity={0.8} />
