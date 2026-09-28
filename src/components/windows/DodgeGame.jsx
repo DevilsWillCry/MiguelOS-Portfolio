@@ -24,7 +24,8 @@ const BOUND = 4.2;
 const PLAYER_Z = 5;
 const SPAWN_Z = -48;
 const PAST_Z = 8.5;
-const COUNT = 16;
+const COUNT = 10;
+const GAP = 7; // separación base en Z entre obstáculos (evita "muros")
 const BASE_SPEED = 15;
 const GRACE = 22;
 const COLORS = ["#ef4444", "#22d3ee", "#a855f7", "#f59e0b", "#ec4899"];
@@ -132,9 +133,10 @@ function Scene({ gameRef, onScore, onGameOver, onShieldChange, scoreRef, phase, 
 
   const initAll = () => {
     const b = gameRef.current.bound || BOUND;
+    // Un obstáculo por franja, bien separados en Z (fila india) → siempre hay hueco
     obsData.current.forEach((d, i) => {
       d.x = randX(b);
-      d.z = -GRACE - i * 3.2 - Math.random() * 2;
+      d.z = -GRACE - i * GAP;
       dressObstacle(obsRefs.current[i]);
     });
     gameRef.current.targetX = 0;
@@ -142,7 +144,11 @@ function Scene({ gameRef, onScore, onGameOver, onShieldChange, scoreRef, phase, 
   };
 
   const respawn = (d, mesh) => {
-    d.z = SPAWN_Z - Math.random() * 12;
+    // Reaparece DETRÁS del más lejano, con separación (se acorta al subir el score)
+    let minZ = Infinity;
+    for (const o of obsData.current) if (o.z < minZ) minZ = o.z;
+    const gap = Math.max(4.5, GAP - scoreRef.current * 0.03);
+    d.z = minZ - gap - Math.random() * 1.5;
     d.x = randX(gameRef.current.bound || BOUND);
     dressObstacle(mesh);
   };
