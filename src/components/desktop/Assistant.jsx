@@ -35,6 +35,8 @@ function MiguModel({ gestureRef, dragging, tint }) {
   // acumula desplazamiento al montar/desmontar). Devuelve escala y offset.
   const { fitScale, centerOffset } = useMemo(() => {
     scene.traverse((o) => {
+      // Coloca el esqueleto en su pose de bind (evita el "derretido")
+      if (o.isSkinnedMesh && o.skeleton) o.skeleton.pose();
       if (!o.isMesh) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
       mats.forEach((m) => {
